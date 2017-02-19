@@ -18,7 +18,7 @@ def added_booking():
 
     if request.method == 'POST':
         with open('static/webhook_json.txt', 'w') as file:
-            file.write(request.form)
+            file.write(json.dumps(request.form))
         return
     else:
         try:
