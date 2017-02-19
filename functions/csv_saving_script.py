@@ -5,7 +5,7 @@ from httplib2 import Http
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
-import directories as dr
+from . import directories as dr
 
 LOCAL_PATH = "/Users/keatonarmentrout/Desktop/Techstars/Mentor Madness/"
 

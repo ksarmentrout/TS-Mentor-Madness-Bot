@@ -1,6 +1,5 @@
 import time
 import csv
-import pandas as pd
 import os
 
 from httplib2 import Http
@@ -10,8 +9,8 @@ from apiclient.discovery import build
 # from oauth2client.contrib.appengine import AppAssertionCredentials
 from oauth2client.service_account import ServiceAccountCredentials
 
-import directories as dr
-from email_sender import *
+from . import directories as dr
+from .email_sender import *
 
 LOCAL_PATH = "/Users/keatonarmentrout/Desktop/Techstars/Mentor Madness/"
 

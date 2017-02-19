@@ -1,6 +1,5 @@
 import time
 import csv
-import pandas as pd
 import os
 
 from httplib2 import Http
@@ -10,23 +9,16 @@ from apiclient.discovery import build
 # from oauth2client.contrib.appengine import AppAssertionCredentials
 from oauth2client.service_account import ServiceAccountCredentials
 
-import directories as dr
-import email_sender
+from . import directories as dr
+from . import email_sender
+from .utils import google_sheets_login
 
 LOCAL_PATH = "/Users/keatonarmentrout/Desktop/Techstars/Mentor Madness/"
 
 
 def main(team=None, specific_day=None, send_emails=True):
-    # Get credentials from Google Developer Console
-    scopes = ['https://www.googleapis.com/auth/spreadsheets']
-    secret_key_json = LOCAL_PATH + 'MM Bot-32fa78cfd51b.json'
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(secret_key_json, scopes=scopes)
-
-    # Authenticate using Http object
-    http_auth = credentials.authorize(Http())
-
     # Build Google API response object for sheets
-    sheets_api = build('sheets', 'v4', credentials=credentials)
+    sheets_api = google_sheets_login()
 
     # Set spreadsheet ID
     spreadsheet_id = '18gb1ehs9-hmXbIkKaTcLUvurzAJzpjDiXgNFZeazrNA'  # This is the MM spreadsheet

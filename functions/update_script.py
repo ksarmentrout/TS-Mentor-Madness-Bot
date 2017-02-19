@@ -1,6 +1,5 @@
 import time
 import csv
-import pandas as pd
 import os
 
 from httplib2 import Http
@@ -10,8 +9,9 @@ from apiclient.discovery import build
 # from oauth2client.contrib.appengine import AppAssertionCredentials
 from oauth2client.service_account import ServiceAccountCredentials
 
-import directories as dr
-from email_sender import *
+from . import directories as dr
+from .email_sender import *
+from . import utils
 
 LOCAL_PATH = "/Users/keatonarmentrout/Desktop/Techstars/Mentor Madness/"
 
@@ -33,7 +33,7 @@ def main():
     # spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
 
     # Set room mapping
-    room_mapping = dr.room_mapping
+    room_mapping = utils.room_mapping
 
     # Set query options
     sheet_options = [
@@ -64,7 +64,7 @@ def main():
 
     # sheet_names = [sheet_options[day_index]]
 
-    full_range = dr.full_range
+    full_range = utils.full_range
 
     # Create holding variables for adding and deleting messages
     adding_msgs = []
