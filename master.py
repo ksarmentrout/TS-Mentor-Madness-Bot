@@ -21,9 +21,12 @@ def added_booking():
             file.write(request.form)
         return
     else:
-        with open(url_for('static', filename='webhook_json.txt')) as file:
-            webhook_json = file.read()
-        return render_template('webhook_display.html', webhook_json=webhook_json)
+        try:
+            with open(url_for('static', filename='webhook_json.txt')) as file:
+                webhook_json = file.read()
+            return render_template('webhook_display.html', webhook_json=webhook_json)
+        except:
+            return 'Error'
 
 
 @app.route('/cancelled_booking', methods=['POST'])
