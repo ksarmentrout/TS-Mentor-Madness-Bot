@@ -25,8 +25,8 @@ def added_booking():
             with open(url_for('static', filename='webhook_json.txt')) as file:
                 webhook_json = file.read()
             return render_template('webhook_display.html', webhook_json=webhook_json)
-        except:
-            return 'Error'
+        except Exception as exc:
+            return str(exc)
 
 
 @app.route('/cancelled_booking', methods=['POST'])
