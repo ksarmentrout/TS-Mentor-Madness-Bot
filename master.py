@@ -1,7 +1,7 @@
 import json
 import os
 
-from flask import Flask, render_template, request, app, send_from_directory
+from flask import Flask, render_template, request, Response
 from functions import utils
 
 app = Flask(__name__)
@@ -17,9 +17,17 @@ def added_booking():
     # {"first_name": "Keaton", "last_name": "Armentrout", "end_time": "2/19/17 4:00 PM", "duration": "1 hour", "start_time": "2/19/17 3:00 PM", "email": "keaton.armentrout@techstarsassociates.com"}
 
     if request.method == 'POST':
-        with open('static/webhook_json.txt', 'w') as file:
-            file.write(json.dumps(request.form))
-        return
+        try:
+            with open('static/webhook_json.txt', 'a') as file:
+                file.write(json.dumps(request.form))
+                file.write('\n')
+            js = json.dumps({'success': True, 'ContentType': 'application/json'})
+            response = Response(js, status=201, mimetype='application/json')
+            return response
+        except Exception:
+            js = json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+            response = Response(js, status=500, mimetype='application/json')
+            return response
     else:
         try:
             with open('static/webhook_json.txt') as file:
