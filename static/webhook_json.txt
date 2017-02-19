@@ -5,3 +5,19 @@
 {}
 {"new_test": "hey man", "one_more_thing": "I love you"}
 {}
+b''
+CombinedMultiDict([ImmutableMultiDict([]), ImmutableMultiDict([('new_test', 'hey man'), ('one_more_thing', 'I love you')])])
+{}
+{}
+{}
+{"new_test": "hey man", "one_more_thing": "I love you"}
+null
+null
+None
+<class 'NoneType'>None
+<class 'dict'>{'pls work': 'pls'}
+<class 'dict'>{'pls work': 'pls'}
+<class 'NoneType'>None
+<class 'dict'>{'pls work': 'pls'}
+<class 'dict'>{'pls work': 'pls'}
+{"pls work": "pls"}
