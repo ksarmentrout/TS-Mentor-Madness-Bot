@@ -1,7 +1,6 @@
-import time
 import csv
 import os
-import pandas as pd
+import numpy as np
 
 from . import directories as dr
 from .email_sender import *
@@ -15,8 +14,8 @@ def add_booking(raw_json):
     meeting = utils.parse_webhook_json(raw_json)
 
     # Set spreadsheet ID
-    spreadsheet_id = utils.spreadsheet_id  # This is the MM spreadsheet
-    # spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
+    # spreadsheet_id = utils.spreadsheet_id  # This is the MM spreadsheet
+    spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
 
     # Set room mapping
     room_mapping = utils.room_mapping
@@ -33,14 +32,14 @@ def add_booking(raw_json):
     if len(sheet_names) > 1:
         sheet_names = sheet_names[0]
 
-    # Get the range of times to look at
-    start_bound = utils.spreadsheet_time_mapping.get(meeting['start_time'])
-    end_bound = utils.spreadsheet_time_mapping.get(meeting['end_time'])
+    day = sheet_names[0]
 
-    cell_range = utils.start_col + start_bound + ':' + utils.end_col + end_bound
+    # Get the range of times to look at
+    cell_range = utils.make_cell_range(meeting['start_time'], meeting['end_time'])
+    range_query = day + '!' + cell_range
 
     # Make request for sheet
-    sheet = sheets_api.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=cell_range).execute()
+    sheet = sheets_api.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_query).execute()
     new_sheet = sheet['values']
 
     # Pad sheet to be the appropriate length in each row
@@ -49,55 +48,49 @@ def add_booking(raw_json):
             new_sheet[idx].extend([''] * (utils.row_length - len(new_sheet_row)))
 
     # Make sheet into dataframe
-    sheet_df = pd.DataFrame(data=new_sheet, columns=utils.headers)
+    sheet_np = np.asarray(new_sheet)
 
+    # Check to see if there is an entirely free block of time.
+    # If so, fill the mentor in completely.
+    found_free_block = False
+    for mentor_col_num in utils.mentor_columns:
+        if not any(x for x in sheet_np[:, mentor_col_num]):
+            for row_idx in range(0, len(new_sheet)):
+                new_sheet[row_idx][mentor_col_num] = meeting['name']
+            found_free_block = True
+            break
 
+    # If there is not a completely free block, fill in by row
+    # I'm iterating over the normal python lists now (not df)
+    if not found_free_block:
+        for row in new_sheet:
+            # If there is a blank mentor column, fill it in
+            appnd = True
+            for x in utils.mentor_columns:
+                if not row[x]:
+                    row[x] = meeting['name']
+                    appnd = False
+                    break
 
+            # If the end is reached, append to the last mentor column
+            # TODO: Add an alert if this happens
+            if appnd:
+                row[utils.mentor_columns[-1]] += ', ' + meeting['name']
 
+    # Update the spreadsheet
+    update_body = {
+        'values': new_sheet
+    }
 
-    row_counter = 0
-    for old_row in reader:
-        # print(old_row)
-        new_row = new_sheet[row_counter]
-        timeslot = new_row[0]
+    # Update the sheet
+    result = sheets_api.spreadsheets().values().update(
+        spreadsheetId=spreadsheet_id, range=range_query,
+        valueInputOption=utils.value_input_option, body=update_body).execute()
 
-        # Make rows the same length if they are not
-        if len(old_row) < len(new_row):
-            old_row.extend([''] * (len(new_row) - len(old_row)))
-        elif len(old_row) > len(new_row):
-            new_row.extend([''] * (len(old_row) - len(new_row)))
+    # Run the update script for that day
+    # TODO: make the update script take input arguments for specific days
 
-        # Iterate over rooms
-        for room_num in range(1, len(room_mapping.keys()) + 1):
-            # Get descriptive variables of room
-            room_dict = room_mapping[room_num]
-            room_name = room_dict['name']
-            mentor_name = new_row[room_dict['mentor_col']]
-
-            for col_num in room_dict['check_range']:
-                old_name = old_row[col_num]
-                new_name = new_row[col_num]
-                if new_name != old_name:
-                    new_event_dict = {'time': timeslot, 'name': new_name, 'mentor': mentor_name,
-                                      'room_num': str(room_num), 'room_name': room_name, 'day': day}
-                    old_event_dict = {'time': timeslot, 'name': old_name, 'mentor': mentor_name,
-                                      'room_num': str(room_num), 'room_name': room_name, 'day': day}
-
-                    if new_name and old_name:
-                        # Someone was changed, assuming the names are different
-                        if process_name(new_name) != process_name(old_name):
-                            deleting_msgs.append(old_event_dict)
-                            adding_msgs.append(new_event_dict)
-                        else:
-                            continue
-                    elif old_name:
-                        # Someone was deleted
-                        deleting_msgs.append(old_event_dict)
-                    elif new_name:
-                        # Someone was added
-                        adding_msgs.append(new_event_dict)
-
-        row_counter += 1
+    return True
 
 
 def remove_booking(raw_json):
@@ -115,19 +108,10 @@ def change_booking(raw_json):
 
 
 def main():
-    # Build Google API response object for sheets
-    sheets_api = utils.google_sheets_login()
-
-    # Set spreadsheet ID
-    spreadsheet_id = utils.spreadsheet_id  # This is the MM spreadsheet
-    # spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
-
-    # Set room mapping
-    room_mapping = utils.room_mapping
 
     # Set query options
     sheet_options = utils.sheet_options
-    sheet_names = [sheet_options[day_index]]
+    sheet_names = [sheet_options[0]]
 
     full_range = utils.full_range
 
@@ -153,15 +137,8 @@ def main():
 
         row_counter = 0
         for old_row in reader:
-            # print(old_row)
             new_row = new_sheet[row_counter]
             timeslot = new_row[0]
-
-            # Make rows the same length if they are not
-            if len(old_row) < len(new_row):
-                old_row.extend([''] * (len(new_row) - len(old_row)))
-            elif len(old_row) > len(new_row):
-                new_row.extend([''] * (len(old_row) - len(new_row)))
 
             # Iterate over rooms
             for room_num in range(1, len(room_mapping.keys()) + 1):
@@ -179,20 +156,6 @@ def main():
                         old_event_dict = {'time': timeslot, 'name': old_name, 'mentor': mentor_name,
                                           'room_num': str(room_num), 'room_name': room_name, 'day': day}
 
-                        if new_name and old_name:
-                            # Someone was changed, assuming the names are different
-                            if process_name(new_name) != process_name(old_name):
-                                deleting_msgs.append(old_event_dict)
-                                adding_msgs.append(new_event_dict)
-                            else:
-                                continue
-                        elif old_name:
-                            # Someone was deleted
-                            deleting_msgs.append(old_event_dict)
-                        elif new_name:
-                            # Someone was added
-                            adding_msgs.append(new_event_dict)
-
             row_counter += 1
 
         # Save the sheet
@@ -201,14 +164,10 @@ def main():
         writer = csv.writer(old_sheet)
         writer.writerows(new_sheet)
 
-    # send_update_mail(adding_msgs, deleting_msgs)
-
 
 def day_to_filename(day):
     csv_name = day.replace(' ', '_').replace('/', '_') + '.csv'
     csv_name = '/cached_schedules/' + csv_name
-    dirname = os.path.dirname(__file__)
-    csv_name = dirname + csv_name
     return csv_name
 
 

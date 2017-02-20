@@ -11,21 +11,21 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from . import directories as dr
 from . import email_sender
-from .utils import google_sheets_login
+from . import utils
 
 LOCAL_PATH = "/Users/keatonarmentrout/Desktop/Techstars/Mentor Madness/"
 
 
 def main(team=None, specific_day=None, send_emails=True):
     # Build Google API response object for sheets
-    sheets_api = google_sheets_login()
+    sheets_api = utils.google_sheets_login()
 
     # Set spreadsheet ID
     spreadsheet_id = '18gb1ehs9-hmXbIkKaTcLUvurzAJzpjDiXgNFZeazrNA'  # This is the MM spreadsheet
     # spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
 
     # Set room mapping
-    room_mapping = dr.room_mapping
+    room_mapping = utils.room_mapping
 
     # Set query options
     sheet_options = [
@@ -51,7 +51,7 @@ def main(team=None, specific_day=None, send_emails=True):
     # Pick out the appropriate sheet names from the list
     sheet_names = [x for x in sheet_options if match_day in x]
 
-    full_range = dr.full_range
+    full_range = utils.full_range
 
     if team is None:
         name_dict = {

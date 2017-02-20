@@ -3,6 +3,7 @@ import os
 
 from flask import Flask, render_template, request, Response
 from functions import utils
+from functions import sheets_scheduler
 
 app = Flask(__name__)
 
@@ -14,13 +15,16 @@ def landing_page():
 
 @app.route('/added_booking', methods=['POST', 'GET'])
 def added_booking():
-    # {"first_name": "Keaton", "last_name": "Armentrout", "end_time": "2/19/17 4:00 PM", "duration": "1 hour", "start_time": "2/19/17 3:00 PM", "email": "keaton.armentrout@techstarsassociates.com"}
-
     if request.method == 'POST':
         try:
             with open('static/webhook_json.txt', 'a') as file:
-                file.write(json.dumps(request.get_json()))
-                file.write('\n')
+                wh_dict = json.dumps(request.get_json())
+                file.write(wh_dict)
+
+            # wh_dict = json.dumps(request.get_json())
+            wh_dict = json.loads(wh_dict)
+            sheets_scheduler.add_booking(wh_dict)
+
             js = json.dumps({'success': True, 'ContentType': 'application/json'})
             response = Response(js, status=201, mimetype='application/json')
             return response
@@ -39,12 +43,32 @@ def added_booking():
 
 @app.route('/cancelled_booking', methods=['POST'])
 def cancelled_booking():
-    return
+    try:
+        wh_dict = json.dumps(request.get_json())
+        sheets_scheduler.remove_booking(wh_dict)
+
+        js = json.dumps({'success': True, 'ContentType': 'application/json'})
+        response = Response(js, status=201, mimetype='application/json')
+        return response
+    except Exception:
+        js = json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+        response = Response(js, status=500, mimetype='application/json')
+        return response
 
 
 @app.route('/changed_booking', methods=['POST'])
 def changed_booking():
-    return
+    try:
+        wh_dict = json.dumps(request.get_json())
+        sheets_scheduler.change_booking(wh_dict)
+
+        js = json.dumps({'success': True, 'ContentType': 'application/json'})
+        response = Response(js, status=201, mimetype='application/json')
+        return response
+    except Exception:
+        js = json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+        response = Response(js, status=500, mimetype='application/json')
+        return response
 
 
 if __name__ == '__main__':

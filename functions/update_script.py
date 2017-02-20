@@ -9,28 +9,18 @@ from apiclient.discovery import build
 # from oauth2client.contrib.appengine import AppAssertionCredentials
 from oauth2client.service_account import ServiceAccountCredentials
 
-from . import directories as dr
+# from . import directories as dr
 from .email_sender import *
 from . import utils
 
-LOCAL_PATH = "/Users/keatonarmentrout/Desktop/Techstars/Mentor Madness/"
-
 
 def main():
-    # Get credentials from Google Developer Console
-    scopes = ['https://www.googleapis.com/auth/spreadsheets']
-    secret_key_json = LOCAL_PATH + 'MM Bot-32fa78cfd51b.json'
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(secret_key_json, scopes=scopes)
-
-    # Authenticate using Http object
-    http_auth = credentials.authorize(Http())
-
     # Build Google API response object for sheets
-    sheets_api = build('sheets', 'v4', credentials=credentials)
+    sheets_api = utils.google_sheets_login()
 
     # Set spreadsheet ID
-    spreadsheet_id = '18gb1ehs9-hmXbIkKaTcLUvurzAJzpjDiXgNFZeazrNA'  # This is the MM spreadsheet
-    # spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
+    # spreadsheet_id = '18gb1ehs9-hmXbIkKaTcLUvurzAJzpjDiXgNFZeazrNA'  # This is the MM spreadsheet
+    spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
 
     # Set room mapping
     room_mapping = utils.room_mapping

@@ -9,7 +9,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 # {"first_name": "Keaton", "last_name": "Armentrout", "end_time": "2/19/17 4:00 PM", "duration": "1 hour", "start_time": "2/19/17 3:00 PM", "email": "keaton.armentrout@techstarsassociates.com"}
 def parse_webhook_json(added_json):
-    ad = json.loads(added_json)
+    ad = added_json
     ad['name'] = ad.get('first_name') + ' ' + ad.get('last_name')
     time_dict = parse_time(ad)
     ad.update(**time_dict)
@@ -41,7 +41,9 @@ def parse_time(original_dict):
 
 def google_sheets_login():
     # Get credentials from Google Developer Console
-    credentials = ServiceAccountCredentials.from_json(json_data=google_api_credentials_json)
+    # credentials = ServiceAccountCredentials.from_json(json_data=json.dumps(google_api_credentials_json))
+    scopes = ['https://www.googleapis.com/auth/spreadsheets']
+    credentials = ServiceAccountCredentials.from_json_keyfile_name('functions/MM_Bot-32fa78cfd51b.json', scopes=scopes)
 
     # Authenticate using Http object
     http_auth = credentials.authorize(Http())
@@ -52,19 +54,28 @@ def google_sheets_login():
     return sheets_api
 
 
-google_api_credentials_json = {
-  "type": os.environ['type'],
-  "project_id": os.environ['project_id'],
-  "private_key_id": os.environ['private_key_id'],
-  "private_key": os.environ['private_key'],
-  "client_email": os.environ['client_email'],
-  "client_id": os.environ['client_id'],
-  "auth_uri": os.environ['auth_uri'],
-  "token_uri": os.environ['token_uri'],
-  "auth_provider_x509_cert_url": os.environ['auth_provider_x509_cert_url'],
-  "client_x509_cert_url": os.environ['client_x509_cert_url'],
-  "scopes": 'https://www.googleapis.com/auth/spreadsheets'
-}
+def make_cell_range(start_time, end_time):
+    start_bound = spreadsheet_time_mapping.get(start_time)
+    end_bound = spreadsheet_time_mapping.get(end_time)
+    end_bound = str(int(end_bound) - 1)
+    cell_range = start_col + start_bound + ':' + end_col + end_bound
+    return cell_range
+
+
+# google_api_credentials_json = {
+#   "type": os.environ['type'],
+#   "project_id": os.environ['project_id'],
+#   "private_key_id": os.environ['private_key_id'],
+#   "private_key": os.environ['private_key'],
+#   "client_email": os.environ['client_email'],
+#   "client_id": os.environ['client_id'],
+#   "auth_uri": os.environ['auth_uri'],
+#   "token_uri": os.environ['token_uri'],
+#   "auth_provider_x509_cert_url": os.environ['auth_provider_x509_cert_url'],
+#   "client_x509_cert_url": os.environ['client_x509_cert_url'],
+#   "scopes": 'https://www.googleapis.com/auth/spreadsheets'
+# }
+
 
 gmail_credentials = {
     'name': os.environ['mm_bot_gmail_name'],
@@ -81,6 +92,8 @@ room_mapping = {
         5: {'name': 'Classroom', 'mentor_col': 13, 'check_range': [14, 15]},
         6: {'name': 'Across Hall', 'mentor_col': 16, 'check_range': [17, 18]}
     }
+
+mentor_columns = [1, 4, 7, 10, 13, 16]
 
 full_range = 'A1:S20'
 
@@ -128,3 +141,5 @@ headers = [
 # each room is made up of 3 columns. Then including the time
 # column on the left makes row_length = 3 * (number of rooms) + 1
 row_length = 19
+
+value_input_option = 'RAW'
