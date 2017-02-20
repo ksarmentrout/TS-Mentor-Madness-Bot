@@ -7,7 +7,6 @@ from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-# {"first_name": "Keaton", "last_name": "Armentrout", "end_time": "2/19/17 4:00 PM", "duration": "1 hour", "start_time": "2/19/17 3:00 PM", "email": "keaton.armentrout@techstarsassociates.com"}
 def parse_webhook_json(added_json):
     ad = added_json
     ad['name'] = ad.get('first_name') + ' ' + ad.get('last_name')

@@ -18,11 +18,11 @@ def added_booking():
     if request.method == 'POST':
         try:
             with open('static/webhook_json.txt', 'a') as file:
-                wh_dict = json.dumps(request.get_json())
-                file.write(wh_dict)
+                webhook_dict = json.dumps(request.get_json())
+                file.write(webhook_dict)
 
             # wh_dict = json.dumps(request.get_json())
-            wh_dict = json.loads(wh_dict)
+            wh_dict = json.loads(webhook_dict)
             sheets_scheduler.add_booking(wh_dict)
 
             js = json.dumps({'success': True, 'ContentType': 'application/json'})
@@ -44,8 +44,8 @@ def added_booking():
 @app.route('/cancelled_booking', methods=['POST'])
 def cancelled_booking():
     try:
-        wh_dict = json.dumps(request.get_json())
-        sheets_scheduler.remove_booking(wh_dict)
+        webhook_dict = request.get_json()
+        sheets_scheduler.remove_booking(webhook_dict)
 
         js = json.dumps({'success': True, 'ContentType': 'application/json'})
         response = Response(js, status=201, mimetype='application/json')
@@ -59,8 +59,8 @@ def cancelled_booking():
 @app.route('/changed_booking', methods=['POST'])
 def changed_booking():
     try:
-        wh_dict = json.dumps(request.get_json())
-        sheets_scheduler.change_booking(wh_dict)
+        webhook_dict = request.get_json()
+        sheets_scheduler.change_booking(webhook_dict)
 
         js = json.dumps({'success': True, 'ContentType': 'application/json'})
         response = Response(js, status=201, mimetype='application/json')
