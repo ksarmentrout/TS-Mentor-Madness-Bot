@@ -1,12 +1,10 @@
-import os
-import time
 import traceback
 
-import gcal_scheduler
-import directories as dr
-import variables as vrs
 import email_sender
-import utils
+import gcal_scheduler
+from utilities import utils as utils
+from utilities import variables as vrs
+from utilities import directories as dr
 
 
 def main(team=None, specific_day=None, send_emails=True, create_calendar_events=False):
@@ -41,15 +39,9 @@ def main(team=None, specific_day=None, send_emails=True, create_calendar_events=
     for day in sheet_names:
         # String formatting for API query and file saving
         sheet_query = day + '!' + full_range
-        csv_name = utils.day_to_filename(day)
 
-        # Make request for sheet
-        sheet = sheets_api.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=sheet_query).execute()
-        new_sheet = sheet['values']
-        new_sheet = new_sheet[1:]  # Get rid of the header row
-        for idx, new_sheet_row in enumerate(new_sheet):
-            if len(new_sheet_row) < vrs.row_length:
-                new_sheet[idx].extend([''] * (vrs.row_length - len(new_sheet_row)))
+        # Get the sheet
+        new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
 
         # Add a spacer dict to separate days
         spacer_dict = {'time': None, 'mentor': None,

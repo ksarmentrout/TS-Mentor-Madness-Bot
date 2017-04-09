@@ -1,0 +1,2 @@
+class GoogleSheetsError(Exception):
+    pass

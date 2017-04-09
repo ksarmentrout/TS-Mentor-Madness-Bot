@@ -2,14 +2,12 @@ import datetime
 import os
 import re
 
-import directories as dr
-import variables as vrs
+from utilities import variables as vrs
+from utilities import directories as dr
+from utilities import utils
 
 os.environ['mm_bot_gmail_name'] = vrs.mm_bot_gmail_name
 os.environ['mm_bot_gmail_password'] = vrs.mm_bot_gmail_password
-
-import utils
-import email_sender
 
 
 def booking_setup(raw_json, custom_range=None):
@@ -19,7 +17,7 @@ def booking_setup(raw_json, custom_range=None):
     meeting = utils.parse_webhook_json(raw_json)
 
     # Set spreadsheet ID
-    spreadsheet_id = vrs.spreadsheet_id  # This is the MM spreadsheet
+    spreadsheet_id = vrs.spreadsheet_id
 
     # Set room mapping
     room_mapping = vrs.room_mapping
@@ -43,21 +41,15 @@ def booking_setup(raw_json, custom_range=None):
         cell_range = utils.make_cell_range(meeting['start_time'], meeting['end_time'])
     else:
         cell_range = custom_range
-    range_query = day + '!' + cell_range
+    sheet_query = day + '!' + cell_range
 
-    # Make request for sheet
-    sheet = sheets_api.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_query).execute()
-    new_sheet = sheet['values']
-
-    # Pad sheet to be the appropriate length in each row
-    for idx, new_sheet_row in enumerate(new_sheet):
-        if len(new_sheet_row) < vrs.row_length:
-            new_sheet[idx].extend([''] * (vrs.row_length - len(new_sheet_row)))
+    # Get the sheet
+    new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
 
     return_dict = {
         'new_sheet': new_sheet,
         'spreadsheet_id': spreadsheet_id,
-        'range_query': range_query,
+        'range_query': sheet_query,
         'meeting': meeting,
         'sheets_api': sheets_api
     }

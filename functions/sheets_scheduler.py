@@ -1,7 +1,7 @@
 import numpy as np
 
-from . import utils
-from . import variables as vrs
+from utilities import variables as vrs
+from utilities import utils
 
 
 def add_booking(raw_json):

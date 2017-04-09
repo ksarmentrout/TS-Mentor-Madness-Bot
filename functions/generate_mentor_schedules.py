@@ -1,60 +1,35 @@
-import os
-
-import directories as dr
-from apiclient.discovery import build
-from httplib2 import Http
-from oauth2client.service_account import ServiceAccountCredentials
-
-from scheduling_bot.email_sender import *
+import email_sender
+from utilities import utils
+from utilities import variables as vrs
 
 
-def main():
-    # Get credentials from Google Developer Console
-    scopes = ['https://www.googleapis.com/auth/spreadsheets']
-    secret_key_json = dr.LOCAL_PATH + 'MM Bot-32fa78cfd51b.json'
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(secret_key_json, scopes=scopes)
-
-    # Authenticate using Http object
-    http_auth = credentials.authorize(Http())
-
+def main(specific_day=None):
     # Build Google API response object for sheets
-    sheets_api = build('sheets', 'v4', credentials=credentials)
+    sheets_api = utils.google_sheets_login()
 
-    # Set spreadsheet ID
-    spreadsheet_id = '18gb1ehs9-hmXbIkKaTcLUvurzAJzpjDiXgNFZeazrNA'  # This is the MM spreadsheet
-    # spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
+    # Set variables
+    spreadsheet_id = vrs.spreadsheet_id
+    room_mapping = vrs.room_mapping
+    full_range = vrs.full_range
+    sheet_options = vrs.sheet_options
 
-    # Set room mapping
-    room_mapping = dr.room_mapping
+    # Determine which day to send for
+    match_day = utils.get_next_day()
 
-    # Set query options
-    sheet_options = [
-        'Mon 2/13', 'Tues 2/14', 'Wed 2/15', 'Thurs 2/16', 'Fri 2/17',
-        'Mon 2/20', 'Tues 2/21', 'Wed 2/22', 'Thurs 2/23', 'Fri 2/24',
-        'Mon 2/27', 'Tues 2/28', 'Wed 3/1', 'Thurs 3/2', 'Fri 3/3',
-        'Mon 3/6', 'Tues 3/7', 'Wed 3/8'
-        ]
+    if specific_day:
+        match_day = specific_day
 
-    sheet_names = ['Wed 3/8']
-
-    full_range = dr.full_range
+    # Pick out the appropriate sheet names from the list
+    sheet_names = [x for x in sheet_options if match_day in x]
 
     mentor_dict = {}
 
     for day in sheet_names:
         # String formatting for API query and file saving
         sheet_query = day + '!' + full_range
-        csv_name = day_to_filename(day)
 
-        # Make request for sheet
-        sheet = sheets_api.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=sheet_query).execute()
-        new_sheet = sheet['values']
-        new_sheet = new_sheet[1:]  # Get rid of the header row
-
-        # Make sure each row is the correct length
-        for idx, new_sheet_row in enumerate(new_sheet):
-            if len(new_sheet_row) < 19:
-                new_sheet[idx].extend([''] * (19 - len(new_sheet_row)))
+        # Get the sheet
+        new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
 
         for row in new_sheet:
             timeslot = row[0]
@@ -74,22 +49,14 @@ def main():
                     mentor_dict[mentor_name] = []
 
                 teamname_idx = room_dict['check_range'][0]
-                teamname = process_name(row[teamname_idx])
+                teamname = utils.process_name(row[teamname_idx])
                 if teamname:
                     new_event_dict = {'time': timeslot, 'mentor': mentor_name, 'company': teamname,
                                       'room_num': str(room_num), 'room_name': room_name, 'day': day}
                     mentor_dict[mentor_name].append(new_event_dict)
 
-    make_daily_mentor_schedules(mentor_dict)
-    make_mentor_packet_schedules(mentor_dict)
-
-
-def day_to_filename(day):
-    csv_name = day.replace(' ', '_').replace('/', '_') + '.csv'
-    csv_name = '/cached_schedules/' + csv_name
-    dirname = os.path.dirname(__file__)
-    csv_name = dirname + csv_name
-    return csv_name
+    email_sender.make_daily_mentor_schedules(mentor_dict)
+    email_sender.make_mentor_packet_schedules(mentor_dict)
 
 
 if __name__ == '__main__':

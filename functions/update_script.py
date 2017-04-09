@@ -1,9 +1,9 @@
 import csv
 
-import gcal_scheduler
-import utils
+from utilities import variables as vrs
 import email_sender
-import variables as vrs
+import gcal_scheduler
+from utilities import utils
 
 
 def main():
@@ -51,12 +51,8 @@ def main():
         sheet_query = day + '!' + full_range
         csv_name = utils.day_to_filename(day)
 
-        # Make request for sheet
-        sheet = sheets_api.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=sheet_query).execute()
-        new_sheet = sheet['values']
-        for idx, new_sheet_row in enumerate(new_sheet):
-            if len(new_sheet_row) < vrs.row_length:
-                new_sheet[idx].extend([''] * (vrs.row_length - len(new_sheet_row)))
+        # Get the sheet
+        new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
 
         # Load old sheet
         old_sheet = open(csv_name, 'r')

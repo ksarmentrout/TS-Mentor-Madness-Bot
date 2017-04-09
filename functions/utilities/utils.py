@@ -6,17 +6,15 @@ utils.py is for FUNCTIONS
 variables.py is for OTHER VARIABLES (mostly for Google Sheets)
 """
 
+import datetime
 import re
-import os
-from datetime import datetime, timedelta
-import time
 
-from httplib2 import Http
 from googleapiclient.discovery import build
+from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 
-import directories as dr
-import variables as vrs
+from utilities import variables as vrs
+from exceptions import *
 
 
 def parse_webhook_json(added_json):
@@ -82,6 +80,24 @@ def google_calendar_login():
     return sheets_api
 
 
+def get_sheet(sheets_api, spreadsheet_id, sheet_query):
+    # Check that inputs exist
+    for x in [sheets_api, spreadsheet_id, sheet_query]:
+        if not x:
+            raise KeyError('Invalid input to utils.get_sheet(): ' + str(x))
+
+    # Make request for sheet
+    sheet = sheets_api.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=sheet_query).execute()
+    new_sheet = sheet['values']
+
+    # Make sure all rows from CSV are the same length
+    for idx, new_sheet_row in enumerate(new_sheet):
+        if len(new_sheet_row) < vrs.row_length:
+            new_sheet[idx].extend([''] * (vrs.row_length - len(new_sheet_row)))
+
+    return new_sheet
+
+
 def make_cell_range(start_time, end_time):
     start_bound = vrs.spreadsheet_time_mapping.get(start_time)
     end_bound = vrs.spreadsheet_time_mapping.get(end_time)
@@ -105,8 +121,8 @@ def make_time_range(start_time):
 
     start_time = start_time[:start_time.find(' ')]
 
-    start_obj = datetime.strptime(start_time, '%H:%M')
-    end_obj = start_obj + timedelta(minutes=30)
+    start_obj = datetime.datetime.strptime(start_time, '%H:%M')
+    end_obj = start_obj + datetime.timedelta(minutes=30)
     end_time = end_obj.strftime('%H:%M')
 
     time_range = start_time + '-' + end_time
@@ -114,19 +130,31 @@ def make_time_range(start_time):
 
 
 def get_next_day():
-    # TODO: make this general
-    today = time.localtime()
-    month = today.tm_mon
-    day = today.tm_mday
+    today = datetime.date.today()
+    month = today.month
+    day = today.day
 
-    # Handle the end of February
-    if month == 2 and day == 28:
-        match_day = '3/1'
-    # Handle before the beginning of MM
-    elif month == 2 and day < 13:
-        match_day = '2/13'
+    # Get next business day
+    if today.isoweekday() in (5, 6, 7):
+        today += datetime.timedelta(days=8 - today.isoweekday())
     else:
-        match_day = str(month) + '/' + str(day + 1)
+        today += datetime.timedelta(1)
+
+    match_day = str(month) + '/' + str(day)
+    return match_day
+
+
+def get_today(skip_weekends=False):
+    today = datetime.date.today()
+    month = today.month
+    day = today.day
+
+    if skip_weekends:
+        # Get next business day
+        if today.isoweekday() in (6, 7):
+            today += datetime.timedelta(days=8 - today.isoweekday())
+
+    match_day = str(month) + '/' + str(day)
     return match_day
 
 
@@ -138,8 +166,13 @@ def day_to_filename(day):
 
 
 def process_name(original_name):
-    # ALL CASES need to be checked because sometimes other information
-    # besides just the name goes into these boxes. I know it's ugly.
+    """
+    ALL CASES need to be checked because sometimes other information
+    besides just the name goes into these boxes. I know it's ugly.
+
+    :param original_name: string value pulled from Google Sheet
+    :return:
+    """
     name = original_name.lower()
     if 'rate' in name:
         name = 'rate'
