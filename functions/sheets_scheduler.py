@@ -1,8 +1,7 @@
-import os
 import numpy as np
 
-from . import directories as dr
 from . import utils
+from . import variables as vrs
 
 
 def add_booking(raw_json):
@@ -17,7 +16,7 @@ def add_booking(raw_json):
     # Check to see if there is an entirely free block of time.
     # If so, fill the mentor in completely.
     found_free_block = False
-    for mentor_col_num in utils.mentor_columns:
+    for mentor_col_num in vrs.mentor_columns:
         if not any(x for x in sheet_np[:, mentor_col_num]):
             for row_idx in range(0, len(new_sheet)):
                 new_sheet[row_idx][mentor_col_num] = meeting['name']
@@ -30,7 +29,7 @@ def add_booking(raw_json):
         for row in new_sheet:
             # If there is a blank mentor column, fill it in
             appnd = True
-            for x in utils.mentor_columns:
+            for x in vrs.mentor_columns:
                 if not row[x]:
                     row[x] = meeting['name']
                     appnd = False
@@ -39,7 +38,7 @@ def add_booking(raw_json):
             # If the end is reached, append to the last mentor column
             # TODO: Add an alert if this happens
             if appnd:
-                row[utils.mentor_columns[-1]] += ', ' + meeting['name']
+                row[vrs.mentor_columns[-1]] += ', ' + meeting['name']
 
     info_dict['new_sheet'] = new_sheet
     return update_google_sheet(**info_dict)
@@ -63,7 +62,7 @@ def remove_booking(raw_json, custom_range=None):
     sheet_np = np.transpose(sheet_np)
 
     # Remove the mentor from the
-    for mentor_col_num in utils.mentor_columns:
+    for mentor_col_num in vrs.mentor_columns:
         if last_name:
             if any(last_name in x for x in sheet_np[mentor_col_num, :]):
                 # Check for both first and last name
@@ -82,7 +81,7 @@ def remove_booking(raw_json, custom_range=None):
 
 def change_booking(raw_json):
     # Two-step process: remove previous booking and add new booking.
-    remove_booking(raw_json, custom_range=utils.full_range)
+    remove_booking(raw_json, custom_range=vrs.full_range)
     return add_booking(raw_json)
 
 
@@ -93,14 +92,13 @@ def booking_setup(raw_json, custom_range=None):
     meeting = utils.parse_webhook_json(raw_json)
 
     # Set spreadsheet ID
-    spreadsheet_id = utils.spreadsheet_id  # This is the MM spreadsheet
-    # spreadsheet_id = '1qdAgkuyAl6DRV3LRn-zheWSiD-r4JIya8Ssr6-DswY4'  # This is my test spreadsheet
+    spreadsheet_id = vrs.spreadsheet_id  # This is the MM spreadsheet
 
     # Set room mapping
-    room_mapping = utils.room_mapping
+    room_mapping = vrs.room_mapping
 
     # Set query options
-    sheet_options = utils.sheet_options
+    sheet_options = vrs.sheet_options
 
     # Set day to retrieve
     sheet_names = [x for x in sheet_options if meeting['day'] in x]
@@ -126,8 +124,8 @@ def booking_setup(raw_json, custom_range=None):
 
     # Pad sheet to be the appropriate length in each row
     for idx, new_sheet_row in enumerate(new_sheet):
-        if len(new_sheet_row) < utils.row_length:
-            new_sheet[idx].extend([''] * (utils.row_length - len(new_sheet_row)))
+        if len(new_sheet_row) < vrs.row_length:
+            new_sheet[idx].extend([''] * (vrs.row_length - len(new_sheet_row)))
 
     return_dict = {
         'new_sheet': new_sheet,
@@ -148,11 +146,15 @@ def update_google_sheet(**kwargs):
 
     # Update the sheet
     sheets_api = kwargs.get('sheets_api')
-    result = sheets_api.spreadsheets().values().update(
-        spreadsheetId=kwargs.get('spreadsheet_id'), range=kwargs.get('range_query'),
-        valueInputOption=utils.value_input_option, body=update_body).execute()
 
-    # Run the update script for that day
-    # TODO: make the update script take input arguments for specific days
+    try:
+        result = sheets_api.spreadsheets().values().update(
+            spreadsheetId=kwargs.get('spreadsheet_id'), range=kwargs.get('range_query'),
+            valueInputOption=vrs.value_input_option, body=update_body).execute()
+        return True
+    except:
 
-    return True
+        # Run the update script for that day
+        # TODO: make the update script take input arguments for specific days
+
+        return False

@@ -1,25 +1,17 @@
-import time
-import csv
-import pandas as pd
 import os
 
-from httplib2 import Http
-
+import directories as dr
 from apiclient.discovery import build
-# from oauth2client.client import GoogleCredentials
-# from oauth2client.contrib.appengine import AppAssertionCredentials
+from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 
-import directories as dr
-from email_sender import *
-
-LOCAL_PATH = "/Users/keatonarmentrout/Desktop/Techstars/Mentor Madness/"
+from scheduling_bot.email_sender import *
 
 
 def main():
     # Get credentials from Google Developer Console
     scopes = ['https://www.googleapis.com/auth/spreadsheets']
-    secret_key_json = LOCAL_PATH + 'MM Bot-32fa78cfd51b.json'
+    secret_key_json = dr.LOCAL_PATH + 'MM Bot-32fa78cfd51b.json'
     credentials = ServiceAccountCredentials.from_json_keyfile_name(secret_key_json, scopes=scopes)
 
     # Authenticate using Http object
@@ -39,10 +31,11 @@ def main():
     sheet_options = [
         'Mon 2/13', 'Tues 2/14', 'Wed 2/15', 'Thurs 2/16', 'Fri 2/17',
         'Mon 2/20', 'Tues 2/21', 'Wed 2/22', 'Thurs 2/23', 'Fri 2/24',
-        'Mon 2/27', 'Tues 2/28', 'Wed 3/1', 'Thurs 3/2', 'Fri 3/3'
+        'Mon 2/27', 'Tues 2/28', 'Wed 3/1', 'Thurs 3/2', 'Fri 3/3',
+        'Mon 3/6', 'Tues 3/7', 'Wed 3/8'
         ]
 
-    sheet_names = ['Tues 2/21']
+    sheet_names = ['Wed 3/8']
 
     full_range = dr.full_range
 

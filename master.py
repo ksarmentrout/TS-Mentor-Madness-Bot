@@ -5,15 +5,15 @@ from flask import Flask, render_template, request, Response
 from functions import utils
 from functions import sheets_scheduler
 
-app = Flask(__name__)
+application = Flask(__name__)
 
 
-@app.route('/')
+@application.route('/')
 def landing_page():
     return render_template('landing_page.html')
 
 
-@app.route('/added_booking', methods=['POST', 'GET'])
+@application.route('/added_booking', methods=['POST', 'GET'])
 def added_booking():
     if request.method == 'POST':
         try:
@@ -41,7 +41,7 @@ def added_booking():
             return str(exc)
 
 
-@app.route('/cancelled_booking', methods=['POST'])
+@application.route('/cancelled_booking', methods=['POST'])
 def cancelled_booking():
     try:
         webhook_dict = request.get_json()
@@ -56,7 +56,7 @@ def cancelled_booking():
         return response
 
 
-@app.route('/changed_booking', methods=['POST'])
+@application.route('/changed_booking', methods=['POST'])
 def changed_booking():
     try:
         webhook_dict = request.get_json()
@@ -73,4 +73,4 @@ def changed_booking():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    application.run(host='0.0.0.0', port=port)
