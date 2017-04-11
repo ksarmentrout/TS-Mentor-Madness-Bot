@@ -1,9 +1,9 @@
 import time
 
 import email_sender
-from utilities import utils
-from utilities import directories as dr
-from utilities import variables as vrs
+from functions.utilities import utils
+from functions.utilities import directories as dr
+from functions.utilities import variables as vrs
 
 
 def main():

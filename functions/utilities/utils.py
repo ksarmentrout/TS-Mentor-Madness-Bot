@@ -13,8 +13,7 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 
-from utilities import variables as vrs
-from exceptions import *
+from functions.utilities import variables as vrs
 
 
 def parse_webhook_json(added_json):

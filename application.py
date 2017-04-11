@@ -1,11 +1,19 @@
 import json
 import os
+import sys
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'functions/'))
+import logging
+from logging import FileHandler
 
 from flask import Flask, render_template, request, Response
+
 from functions.utilities import utils
 from functions import sheets_scheduler
 
 application = Flask(__name__)
+file_handler = FileHandler("debug.log","a")
+file_handler.setLevel(logging.WARNING)
+application.logger.addHandler(file_handler)
 
 
 @application.route('/')
@@ -73,6 +81,4 @@ def changed_booking():
 
 if __name__ == '__main__':
     # port = int(os.environ.get('PORT', 5000))
-    # application.run(host='0.0.0.0', port=port)
-    application.debug = True
     application.run()

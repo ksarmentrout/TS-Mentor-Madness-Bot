@@ -1,6 +1,6 @@
 import email_sender
-from utilities import utils
-from utilities import variables as vrs
+from functions.utilities import utils
+from functions.utilities import variables as vrs
 
 
 def main(specific_day=None):

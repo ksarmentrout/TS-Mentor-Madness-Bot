@@ -2,9 +2,9 @@ import datetime
 import os
 import re
 
-from utilities import variables as vrs
-from utilities import directories as dr
-from utilities import utils
+from functions.utilities import variables as vrs
+from functions.utilities import directories as dr
+from functions.utilities import utils
 
 os.environ['mm_bot_gmail_name'] = vrs.mm_bot_gmail_name
 os.environ['mm_bot_gmail_password'] = vrs.mm_bot_gmail_password

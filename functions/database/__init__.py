@@ -13,9 +13,8 @@ from database import db_tables as tables
 # different repos. Without specifying an absolute path, a
 # new database file would be created in the root directories
 # of each repo that uses a Session() object.
-# This method strips the filepath down to ScholarTools and
-# then points it to create a papers.db file within pydb.
-
+# This method strips the filepath down to `functions` and
+# then points it to create a meetings.db file within `database`.
 package_path = os.path.dirname(os.path.realpath(__file__))
 
 

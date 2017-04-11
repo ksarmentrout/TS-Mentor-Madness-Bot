@@ -1,9 +1,9 @@
 import csv
 
-from utilities import variables as vrs
+from functions.utilities import variables as vrs
 import email_sender
 import gcal_scheduler
-from utilities import utils
+from functions.utilities import utils
 
 
 def main():

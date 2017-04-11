@@ -1,7 +1,7 @@
 import csv
 
-from utilities import variables as vrs
-from utilities import utils
+from functions.utilities import variables as vrs
+from functions.utilities import utils
 
 
 def main():
