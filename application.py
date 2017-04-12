@@ -60,12 +60,23 @@ def view_schedule():
     form_data = request.form
 
 
-    # if form_data.get('day-picker') is None:
-    #     flash('Please choose a day to view the schedule.')
-    #     return redirect(url_for('dashboard'))
-    # elif form_data.get('names') is None:
-    #     flash('Please choose a person or team to view their schedule.')
-    #     return redirect(url_for('dashboard'))
+    if form_data.get('daily_or_weekly') == 'daily':
+        if not form_data.get('day-picker'):
+            flash('Please choose a day to view the schedule. ' + str(form_data))
+            return redirect(url_for('dashboard'))
+        elif not form_data.get('names'):
+            flash('Please choose a person or team to view their schedule.')
+            return redirect(url_for('dashboard'))
+
+    elif form_data.get('daily_or_weekly') == 'weekly':
+        if not form_data.get('week-picker'):
+            flash('Please choose a week to view the schedule. ' + str(form_data))
+            return redirect(url_for('dashboard'))
+        # elif not form_data.get('names'):
+        #     flash('Please choose a person or team to view their schedule.')
+        #     return redirect(url_for('dashboard'))
+    else:
+        return False
 
     # TODO: Implement call to database
 
@@ -75,11 +86,11 @@ def view_schedule():
     )
 
 
-
 @application.route('/email_schedule', methods=['POST'])
 def email_schedule():
     flash('schedule was emailed')
     return redirect(url_for('dashboard'))
+
 
 
 

@@ -115,12 +115,10 @@
                         <div class="row">
                         <label for="view_or_email">View or Email Schedules?</label>
                         </div>
-                        <input type="radio" name="view_or_email" value="view" checked> View<br>
-                        <input type="radio" name="view_or_email" value="email"> Email<br>
+                        <input type="radio" name="daily_view_or_email" value="view" checked> View<br>
+                        <input type="radio" name="daily_view_or_email" value="email"> Email<br>
                     </div>
                     </div>
-
-
 
 
                     <div class="button-group" style="align-content: center">
@@ -129,7 +127,6 @@
                             Go
                         </button>
                     </div>
-
 
                     <div class="button-group row">
                         <button type="submit" class="btn btn-secondary">
@@ -150,7 +147,7 @@
             <div class="solid_bubble">
                 <h2>Weekly Schedules</h2>
 
-                <form action="" class=center-block" id="weekly-form">
+                <form action="" method="post" class=center-block" id="weekly-form">
 
                     <div class="container">
                     <div class="form-group col-xs-8 col-md-8">
@@ -172,7 +169,7 @@
 {#                    <label>Week :</label> <span id="startDate"></span>#}
 
                     Select a week:
-                    <input type="week" name="year_week">
+                    <input type="week" name="week-picker">
                     </div>
 
 
@@ -181,21 +178,17 @@
                         <div class="row">
                             <label for="view_or_email">View or Email Schedules?</label>
                         </div>
-                        <input type="radio" name="view_or_email" value="view" checked> View<br>
-                        <input type="radio" name="view_or_email" value="email"> Email<br>
+                        <input type="radio" name="weekly_view_or_email" value="view" checked> View<br>
+                        <input type="radio" name="weekly_view_or_email" value="email"> Email<br>
                     </div>
                     </div>
-
-                </form>
-
 
 
                 <div class="button-group" style="align-content: center">
-                    <form action="{{ url_for('view_schedule') }}" method="post">
-                        <button type="button" class="btn btn-secondary" id="weekly-submit-btn">
-                            Go
-                        </button>
-                    </form>
+                    <button type="submit" class="btn btn-secondary" id="weekly-submit-btn" name="weekly_submit_btn"
+                    value="">
+                        Go
+                    </button>
                 </div>
 
                 <div class="button-group">
@@ -206,6 +199,8 @@
                         Generate Mentor Email Content
                     </button>
                 </div>
+
+                </form>
             </div>
         </div>
     </div>
@@ -213,7 +208,6 @@
 
     <script>
     function objectifyForm(formArray) {//serialize data function
-
       var returnArray = {};
       for (var i = 0; i < formArray.length; i++){
         returnArray[formArray[i]['name']] = formArray[i]['value'];
@@ -221,19 +215,38 @@
       return returnArray;
     }
 
+
     $( "#daily-submit-btn" ).click(function( event ) {
+{#        var form_data_list = $( '#daily-form' ).serializeArray();#}
+{#        var form_json = objectifyForm(form_data_list);#}
 
-
-        var form_data_list = $( '#daily-form' ).serializeArray();
-        var form_json = objectifyForm(form_data_list);
-
-
-        let action = "{{ url_for('view_schedule') }}";
-        if (form_json['view_or_email'] == 'email') {
-            action = "/email_schedule";
-
+        var action = "{{ url_for('view_schedule') }}";
+        if (document.querySelector('input[name="daily_view_or_email"]:checked').value == 'email') {
+            action = "{{ url_for('email_schedule') }}";
         }
         $( '#daily-form' ).attr("action", action);
+
+        {# Add a hidden field to identify as daily schedule #}
+        var input = $("<input>")
+               .attr("type", "hidden")
+               .attr("name", "daily_or_weekly").val("daily");
+        $('#daily-form').append($(input));
+    });
+
+
+    $( "#weekly-submit-btn" ).click(function( event ) {
+        var action = "{{ url_for('view_schedule') }}";
+        if (document.querySelector('input[name="weekly_view_or_email"]:checked').value == 'email') {
+            action = "{{ url_for('email_schedule') }}";
+        }
+        $( '#weekly-form' ).attr("action", action);
+
+        {# Add a hidden field to identify as weekly schedule #}
+        var input = $("<input>")
+               .attr("type", "hidden")
+               .attr("name", "daily_or_weekly").val("weekly");
+        $('#weekly-form').append($(input));
+    });
 
 {#        document.daily_submit_btn_form.daily_submit_btn.value = JSON.stringify(form_json);#}
 {#        console.log(document.daily_submit_btn_form.daily_submit_btn.value);#}
@@ -255,11 +268,8 @@
 {#        event.stopPropagation();#}
 {#        event.stopImmediatePropagation();#}
 {#        return false;#}
-    });
 
     $("#daily-form").submit(function(event) {
-{#        console.log(event);#}
-{#        return false;#}
 {#        event.preventDefault();#}
     });
 
