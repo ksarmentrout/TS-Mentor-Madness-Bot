@@ -3,7 +3,14 @@
 {% block body_class %}landing-page-body{% endblock %}
 
 {% block content %}
-<h1 class="hello-world" style="text-align: center; margin-top: 5%;">
-    Mentor Madness Scheduler
-</h1>
+    <h1 style="text-align: center; margin-top: 5%;">
+        Mentor Madness Scheduler
+    </h1>
+
+    <div id="button-wrapper">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-success">
+            Continue to Dashboard
+        </a>
+    </div>
+
 {% endblock %}

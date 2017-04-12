@@ -1,0 +1,267 @@
+{% extends 'base_layout.html' %}
+{% block title %}Mentor Madness Scheduler{% endblock %}
+{% block body_class %}landing-page-body{% endblock %}
+
+{% block head %}
+<script>
+    $( function() {
+        $( "#day-picker" ).datepicker({
+            dateFormat: 'D m/dd/yy'
+        });
+    } );
+
+{#    $( function() {#}
+{#        $( "#week-picker" ).datepicker({#}
+{#            dateFormat: 'D m/dd'#}
+{#        });#}
+{#    } );#}
+
+    $(function() {
+        var startDate;
+        var endDate;
+
+        var selectCurrentWeek = function() {
+            window.setTimeout(function () {
+                $('.week-picker').find('.ui-datepicker-current-day a').addClass('ui-state-active')
+            }, 1);
+        };
+
+        $('#week-picker').datepicker( {
+            showOtherMonths: true,
+            selectOtherMonths: true,
+            showWeek: true,
+            onSelect: function(dateText, inst) {
+                var date = $(this).datepicker('getDate');
+                startDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
+                endDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 6);
+{#                var dateFormat = inst.settings.dateFormat || $.datepicker._defaults.dateFormat;#}
+                var dateFormat = 'D m/dd/yy';
+                $('#startDate').text(
+                        String($.datepicker.formatDate( dateFormat, startDate).concat(
+                                ' - ',
+                                String($.datepicker.formatDate( dateFormat, endDate))
+                        )
+                        )
+                );
+{#                $('#endDate').text($.datepicker.formatDate( dateFormat, endDate, inst.settings ));#}
+
+                selectCurrentWeek();
+            },
+            beforeShowDay: function(date) {
+                var cssClass = '';
+                if(date >= startDate && date <= endDate)
+                    cssClass = 'ui-datepicker-current-day';
+                return [true, cssClass];
+            },
+            onChangeMonthYear: function(year, month, inst) {
+                selectCurrentWeek();
+            }
+        });
+
+        $('.week-picker .ui-datepicker-calendar').on('mousemove', 'tr', function() { $(this).find('td a').addClass('ui-state-hover'); });
+        $('.week-picker .ui-datepicker-calendar').on('mouseleave', 'tr', function() { $(this).find('td a').removeClass('ui-state-hover'); });
+    });
+
+</script>
+{% endblock %}
+
+{% block content %}
+    <h1 style="text-align: center; margin-top: 5%;">
+        Dashboard
+    </h1>
+    {% with messages = get_flashed_messages() %}
+       {% if messages %}
+          {% for message in messages %}
+              <p>
+             {{ message }}
+              </p>
+          {% endfor %}
+       {% endif %}
+    {% endwith %}
+
+    <div class="col-lg-12 column-container">
+        <div class="col-sm-6">
+            <div class="solid_bubble">
+                <h2>Daily Schedules</h2>
+
+                <form action="" method="post" class=center-block" id="daily-form">
+                    <div class="container">
+                    <div class="form-group col-xs-8 col-md-8" style="margin: 0 auto">
+                        <label for="day-picker">Single Day</label>
+                        <input type="text" name="day-picker" id="day-picker">
+{#                        <select name="day-picker" id="day-picker">#}
+{#                            <option value="" selected disabled>--</option>#}
+{#                            {% for day in days %}#}
+{#                            <option value={{ day }}>{{ day }}</option>#}
+{#                            {% endfor %}#}
+{#                        </select>#}
+                    </div>
+                    </div>
+
+                    <div class="container">
+                    <div class="form-group col-xs-8 col-md-8">
+                        <label for="names">Recipient</label>
+                        <select name="names" id="names">
+                            <option value="" selected disabled>--</option>
+                            {% for name in all_names %}
+                                <option value={{ name }}>{{ all_proper_names[loop.index0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    </div>
+
+                    <div class="container">
+                    <div class="form-group col-xs-8 col-md-8">
+                        <div class="row">
+                        <label for="view_or_email">View or Email Schedules?</label>
+                        </div>
+                        <input type="radio" name="view_or_email" value="view" checked> View<br>
+                        <input type="radio" name="view_or_email" value="email"> Email<br>
+                    </div>
+                    </div>
+
+
+
+
+                    <div class="button-group" style="align-content: center">
+                        <button type="submit" class="btn btn-secondary" id="daily-submit-btn" name="daily_submit_btn"
+                        value="">
+                            Go
+                        </button>
+                    </div>
+
+
+                    <div class="button-group row">
+                        <button type="submit" class="btn btn-secondary">
+                            Generate Mentor Schedules
+                        </button>
+                        <button type="submit" class="btn btn-secondary">
+                            Generate Mentor Email Content
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+
+        <div class="col-sm-6">
+            <div class="solid_bubble">
+                <h2>Weekly Schedules</h2>
+
+                <form action="" class=center-block" id="weekly-form">
+
+                    <div class="container">
+                    <div class="form-group col-xs-8 col-md-8">
+                        <label for="weeks">Weeks</label>
+                        <select name="weeks" id="weeks">
+                            <option value="" selected disabled>--</option>
+                            {% for week in weeks %}
+                            <option value={{ week }}>{{ week }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    </div>
+
+                    <div class="container">
+
+{#                    <label for="week-picker">Single Week</label>#}
+{#                    <div id="week-picker"></div>#}
+{#                    <br /><br />#}
+{#                    <label>Week :</label> <span id="startDate"></span>#}
+
+                    Select a week:
+                    <input type="week" name="year_week">
+                    </div>
+
+
+                    <div class="container">
+                    <div class="form-group col-xs-8 col-md-8">
+                        <div class="row">
+                            <label for="view_or_email">View or Email Schedules?</label>
+                        </div>
+                        <input type="radio" name="view_or_email" value="view" checked> View<br>
+                        <input type="radio" name="view_or_email" value="email"> Email<br>
+                    </div>
+                    </div>
+
+                </form>
+
+
+
+                <div class="button-group" style="align-content: center">
+                    <form action="{{ url_for('view_schedule') }}" method="post">
+                        <button type="button" class="btn btn-secondary" id="weekly-submit-btn">
+                            Go
+                        </button>
+                    </form>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary">
+                        Generate Mentor Schedules
+                    </button>
+                    <button type="button" class="btn btn-secondary">
+                        Generate Mentor Email Content
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    function objectifyForm(formArray) {//serialize data function
+
+      var returnArray = {};
+      for (var i = 0; i < formArray.length; i++){
+        returnArray[formArray[i]['name']] = formArray[i]['value'];
+      }
+      return returnArray;
+    }
+
+    $( "#daily-submit-btn" ).click(function( event ) {
+
+
+        var form_data_list = $( '#daily-form' ).serializeArray();
+        var form_json = objectifyForm(form_data_list);
+
+
+        let action = "{{ url_for('view_schedule') }}";
+        if (form_json['view_or_email'] == 'email') {
+            action = "/email_schedule";
+
+        }
+        $( '#daily-form' ).attr("action", action);
+
+{#        document.daily_submit_btn_form.daily_submit_btn.value = JSON.stringify(form_json);#}
+{#        console.log(document.daily_submit_btn_form.daily_submit_btn.value);#}
+
+{#        $.ajax({#}
+{#            type: "POST",#}
+{#            url: document.daily_submit_btn_form.action,#}
+{#            data: JSON.stringify(form_json),      // NOTE CHANGE HERE#}
+{#            contentType: "application/json; charset=utf-8",#}
+{#            dataType: "json",#}
+{#            success: function (msg) {#}
+{#                alert(msg);#}
+{#            },#}
+{#            error: function (msg) {#}
+{#                alert('error');#}
+{#            }#}
+{#        });#}
+{#        event.preventDefault();#}
+{#        event.stopPropagation();#}
+{#        event.stopImmediatePropagation();#}
+{#        return false;#}
+    });
+
+    $("#daily-form").submit(function(event) {
+{#        console.log(event);#}
+{#        return false;#}
+{#        event.preventDefault();#}
+    });
+
+    </script>
+{% endblock %}

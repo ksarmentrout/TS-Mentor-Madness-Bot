@@ -1,0 +1,297 @@
+/*
+// ---------------------------------------
+// +++++++++++++++++++++++++++++++++++++++ General layout section
+// ---------------------------------------
+*/
+html, body {
+    height: 100%;
+    overflow: auto;
+    /*overflow-y: scroll;*/
+    overflow-x: hidden;
+}
+
+body {
+    min-height: 100%;
+    position: relative;
+}
+
+#holder {
+    min-height: 100%;
+    position: relative;
+    /*padding-bottom: 6rem;*/
+    /*background-color: #c7ddef;*/
+    overflow: hidden;
+}
+
+#content-div {
+    padding-bottom: 10px;
+    margin-bottom: 50px;
+
+    overflow: hidden;
+}
+
+.navbar {
+    margin-bottom: 0;
+    background-color: rgba(54, 66, 69, 0.95);
+    /*background-color: #489E60;*/
+    border: 0;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0;
+}
+
+.navbar a {
+    color: white !important;
+}
+
+.navbar.landing_page_navbar, .navbar.about_page_navbar, .navbar.contact_page_navbar {
+    background-color: rgba(54, 66, 69, 0.95);
+}
+
+
+/*
+// ---------------------------------------
+// +++++++++++++++++++++++++++++++++++++++ Dashboard section
+// ---------------------------------------
+*/
+
+.fg-wrapper {
+    text-align: center;
+}
+
+.button-group {
+    text-align: center;
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+
+#daily-form, #weekly-form {
+    padding-left: 8%;
+    padding-right: 8%;
+    overflow: visible;
+}
+
+.column-container {
+    display: inline-block;
+    margin-top: 3%;
+}
+
+.solid_bubble {
+    align-items: center;
+    overflow: auto;
+    /*margin-top: 1%;*/
+    /*margin-bottom: 1%;*/
+    /*margin-right: 1%;*/
+    /*margin-left: 1%;*/
+    margin: auto;
+    border-radius: 10px;
+    background-color: rgba(54, 66, 69, 0.25);
+    /*color: white;*/
+}
+
+.solid_bubble h2 {
+    /*color: whitesmoke;*/
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Small and smaller screens */
+@media (max-width: 991px) {
+    .solid_bubble {
+        margin-top: 2%;
+        margin-bottom: 2%;
+    }
+}
+
+
+/*
+// ---------------------------------------
+// +++++++++++++++++++++++++++++++++++++++ Main page section
+// ---------------------------------------
+*/
+#content-div .vertical-center {
+    align-items: center;
+    /*padding-bottom: 30px;*/
+    overflow: auto;
+    /*background-color: #c7ddef;*/
+    margin-top: 5%;
+    margin-bottom: 5%;
+}
+
+.title-body {
+    /*border-radius: 10px;*/
+    background-color: rgba(54, 66, 69, 0.95);
+    /*padding-bottom: 20%;*/
+    /*margin-bottom: 5%;*/
+    padding-top: 5%;
+    padding-bottom: 5%;
+}
+
+.title-body h1 {
+    font-size: 63px;
+    text-align: center;
+    color: white;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.input-group-addon {
+    background-color: #FFF;
+    border-right: none;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+}
+
+form .category-selector-div {
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 16px;
+}
+
+.input-group input {
+    border-radius: 0;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+}
+
+.input-group .input-group-addon + .form-control
+{
+    border-left:none;
+
+}
+
+.input-group-addon {
+    border-radius: 0;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+}
+
+#main-form {
+    padding-left: 8%;
+    padding-right: 8%;
+    overflow: visible;
+}
+
+#main-submit-button {
+    background-color: rgba(158, 124, 255, 1);
+    border-color: rgba(158, 124, 255, 1);
+    height: 50px;
+    color: white;
+    font-weight: bold;
+    font-size: x-large;
+    /*position: absolute;*/
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0;
+}
+
+#button-wrapper {
+    position: relative;
+    text-align: center;
+}
+
+/* Small and smaller screens */
+@media (max-width: 991px) {
+    form .category-selector-div {
+        padding-right: 0;
+    }
+
+    #main-submit-button {
+        /*max-width: 150px;*/
+        width: 40%;
+        /*margin: auto;*/
+        font-size: larger;
+    }
+    
+    #button-wrapper {
+        text-align: center;
+    }
+
+    #circle_info_button {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Only small-sized screens (not phones) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .title-body h1 {
+        /*font-size: 40px;*/
+    }
+}
+
+@media (max-width: 550px) {
+    #main-submit-button {
+        /*font-weight: normal;*/
+        font-size: small;
+    }
+    .title-body h1 {
+        font-size: 40px;
+    }
+}
+
+
+/*
+// ---------------------------------------
+// +++++++++++++++++++++++++++++++++++++++ Search results section
+// ---------------------------------------
+*/
+#results-div {
+    position: relative;
+    margin-top: 3%;
+}
+
+.divider {
+    background-color: rgba(158, 124, 255, 1);;
+    height: .8vh;
+    /*margin-bottom: 1%;*/
+}
+
+.data-ul {
+    width: 70%;
+    margin: auto;
+}
+
+.btn:focus,.btn:active {
+   outline: none !important;
+}
+
+.canvas-div {
+    width: 100%;
+}
+
+/* Small and smaller screens */
+@media (max-width: 991px) {
+    #slide-data-wrapper {
+        /*text-align: center;*/
+    }
+}
+
+@media (max-width: 600px) {
+    .provider-name {
+        font-size: 25pt;
+        margin-top: 5%;
+    }
+}
+
+
+/*
+// ---------------------------------------
+// +++++++++++++++++++++++++++++++++++++++ Footer section
+// ---------------------------------------
+*/
+
+#footer {
+    /*height: 50px;*/
+    /*background-color: blue;*/
+    bottom: 0;
+    position: absolute;
+    width: 100%;
+    padding: 1rem;
+}
+
+#footer p {
+    font-size: 10px;
+    color: black;
+    text-align: center;
+    padding-bottom: 10px;
+}

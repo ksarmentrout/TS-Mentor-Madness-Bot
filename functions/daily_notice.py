@@ -2,9 +2,9 @@ import traceback
 
 import email_sender
 import gcal_scheduler
-from utilities import utils as utils
-from utilities import variables as vrs
-from utilities import directories as dr
+from functions.utilities import utils as utils
+from functions.utilities import variables as vrs
+from functions.utilities import directories as dr
 
 
 def main(team=None, specific_day=None, send_emails=True, create_calendar_events=False):
@@ -58,6 +58,7 @@ def main(team=None, specific_day=None, send_emails=True, create_calendar_events=
                 room_dict = room_mapping[room_num]
                 room_name = room_dict['name']
                 mentor_name = row[room_dict['mentor_col']]
+
 
                 for col_num in room_dict['check_range']:
                     name = utils.process_name(row[col_num])
