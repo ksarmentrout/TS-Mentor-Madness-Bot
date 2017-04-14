@@ -2,6 +2,7 @@ import traceback
 
 import email_sender
 import gcal_scheduler
+from meeting import Meeting
 from functions.utilities import utils as utils
 from functions.utilities import variables as vrs
 from functions.utilities import directories as dr
@@ -46,8 +47,10 @@ def main(team=None, specific_day=None, send_emails=True, create_calendar_events=
         # Add a spacer dict to separate days
         spacer_dict = {'time': None, 'mentor': None,
                        'room_num': None, 'room_name': None, 'day': day}
+        spacer_mtg = Meeting(spacer_dict)
+
         for key, val in name_dict.items():
-            name_dict[key].append(spacer_dict)
+            name_dict[key].append(spacer_mtg)
 
         for row in new_sheet:
             timeslot = row[0]

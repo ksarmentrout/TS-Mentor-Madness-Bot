@@ -76,8 +76,9 @@ def main():
         print(event)
 
 
-def add_cal_events(event_list):
-    cal_api = utils.google_calendar_login()
+def add_cal_events(event_list, cal_api=None):
+    if cal_api is None:
+        cal_api = utils.google_calendar_login()
 
     for meeting in event_list:
         # If meeting already exists, don't recreate it.
@@ -105,8 +106,9 @@ def add_cal_events(event_list):
         print('created event: ' + created_event['summary'])
 
 
-def delete_cal_events(event_list):
-    cal_api = utils.google_calendar_login()
+def delete_cal_events(event_list, cal_api=None):
+    if cal_api is None:
+        cal_api = utils.google_calendar_login()
 
     for meeting in event_list:
         event_id = check_for_cal_event(cal_api, meeting, return_event_id=True)
@@ -120,6 +122,14 @@ def delete_cal_events(event_list):
             # Delete event
             deleted_event = cal_api.events().delete(calendarId=cal_id, eventId=event_id).execute()
             print('deleted event: ' + deleted_event['summary'])
+
+
+def update_cal_events(added_msg_dicts, deleted_msg_dicts):
+    cal_api = utils.google_calendar_login()
+
+    # Send mail
+    add_cal_events(added_msg_dicts, cal_api)
+    delete_cal_events(deleted_msg_dicts, cal_api)
 
 
 def check_for_cal_event(cal_api, meeting, return_event_id=False):

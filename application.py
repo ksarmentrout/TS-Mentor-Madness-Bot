@@ -92,6 +92,15 @@ def email_schedule():
     return redirect(url_for('dashboard'))
 
 
+@application.route('/update_db', methods=['POST'])
+def update_db():
+    try:
+        update_script.main()
+        return True
+    except:
+        return False
+
+
 
 
 

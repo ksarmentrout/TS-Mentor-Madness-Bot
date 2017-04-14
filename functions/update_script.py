@@ -1,9 +1,12 @@
 import csv
+from datetime import datetime
 
-from functions.utilities import variables as vrs
 import email_sender
 import gcal_scheduler
+from meeting import Meeting
 from functions.utilities import utils
+from functions.utilities import variables as vrs
+from database import db_interface as db
 
 
 def main():
@@ -42,74 +45,58 @@ def main():
         except IndexError:
             break
 
-    # Create holding variables for adding and deleting messages
-    adding_msgs = []
-    deleting_msgs = []
-
     for day in sheet_names:
         # String formatting for API query and file saving
         sheet_query = day + '!' + full_range
-        csv_name = utils.day_to_filename(day)
 
         # Get the sheet
         new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
 
-        # Load old sheet
-        old_sheet = open(csv_name, 'r')
-        reader = csv.reader(old_sheet)
+        # Load new sheet
+        reader = csv.reader(new_sheet)
 
-        row_counter = 0
-        for old_row in reader:
-            new_row = new_sheet[row_counter]
-            timeslot = new_row[0]
+        # Create holder for current state of meetings
+        current_meeting_list = []
 
-            # Make rows the same length if they are not
-            if len(old_row) < len(new_row):
-                old_row.extend([''] * (len(new_row) - len(old_row)))
-            elif len(old_row) > len(new_row):
-                new_row.extend([''] * (len(old_row) - len(new_row)))
+        for row in reader:
+            timeslot = parse_timeslot(row[0])
+
+            # Make each rows the full length if it is not
+            if len(row) < vrs.row_length:
+                row.extend([''] * (vrs.row_length - len(row)))
 
             # Iterate over rooms
             for room_num in range(1, len(room_mapping) + 1):
                 # Get descriptive variables of room
                 room_dict = room_mapping[room_num]
-                room_name = room_dict['name']
-                mentor_name = new_row[room_dict['mentor_col']]
 
-                for col_num in room_dict['check_range']:
-                    old_name = old_row[col_num]
-                    new_name = new_row[col_num]
-                    if new_name != old_name:
-                        new_event_dict = {'time': timeslot, 'name': new_name, 'mentor': mentor_name,
-                                          'room_num': str(room_num), 'room_name': room_name, 'day': day}
-                        old_event_dict = {'time': timeslot, 'name': old_name, 'mentor': mentor_name,
-                                          'room_num': str(room_num), 'room_name': room_name, 'day': day}
+                meeting_info = {
+                    'start_time': timeslot,
+                    'room_name': room_dict['name'],
+                    'mentor': row[room_dict['mentor_col']],
+                    'company': row[room_dict['company_col']],
+                    'associate': row[room_dict['associate_col']],
+                    'day': day
+                }
 
-                        if new_name and old_name:
-                            # Someone was changed, assuming the names are different
-                            if utils.process_name(new_name) != utils.process_name(old_name):
-                                deleting_msgs.append(old_event_dict)
-                                adding_msgs.append(new_event_dict)
-                            else:
-                                continue
-                        elif old_name:
-                            # Someone was deleted
-                            deleting_msgs.append(old_event_dict)
-                        elif new_name:
-                            # Someone was added
-                            adding_msgs.append(new_event_dict)
+                current_meeting = Meeting(meeting_info)
 
-            row_counter += 1
+                current_meeting_list.append(current_meeting)
 
-        # Save the sheet
-        old_sheet.close()
-        old_sheet = open(csv_name, 'w')
-        writer = csv.writer(old_sheet)
-        writer.writerows(new_sheet)
+        # Compare the current version of the meeting with old meetings
+        update_dict = db.process_changes(current_meeting_list)
 
-    email_sender.send_update_mail(adding_msgs, deleting_msgs)
-    gcal_scheduler.add_cal_events(adding_msgs)
-    gcal_scheduler.delete_cal_events(deleting_msgs)
+        # Get the adding and deleting dictionaries
+        adding = update_dict['adding']
+        deleting = update_dict['deleting']
+
+        # Send emails
+        email_sender.send_update_mail(adding, deleting)
+        gcal_scheduler.update_cal_events(adding, deleting)
+
+
+def parse_timeslot(timeslot):
+    return timeslot
 
 
 if __name__ == '__main__':

@@ -8,33 +8,23 @@ Base = declarative_base()
 class Meetings(Base):
     __tablename__ = 'meetings'
 
-    # id = sql.Column(sql.INTEGER, primary_key=True)
-
-    day = sql.Column(sql.VARCHAR)
-    room_number = sql.Column(sql.INTEGER)
+    day = sql.Column(sql.VARCHAR, primary_key=True)
+    room_number = sql.Column(sql.INTEGER, primary_key=True)
     room_name = sql.Column(sql.VARCHAR)
-    start_time = sql.Column(sql.VARCHAR)
+    start_time = sql.Column(sql.VARCHAR, primary_key=True)
     end_time = sql.Column(sql.VARCHAR)
 
-    mentor_name = sql.Column(sql.VARCHAR)
-    company_name = sql.Column(sql.VARCHAR)
-    associate_name = sql.Column(sql.VARCHAR)
+    mentor = sql.Column(sql.VARCHAR)
+    company = sql.Column(sql.VARCHAR)
+    associate = sql.Column(sql.VARCHAR)
 
     timestamp = sql.Column(sql.TIMESTAMP)
-
-    # Define composite primary key
-    sql.PrimaryKeyConstraint(
-        'day',
-        'start_time',
-        'room_number',
-        name='id'
-    )
 
     # This is used for comparisons with updated information.
     fields = [
         'day', 'room_number', 'room_name', 'start_time',
-        'end_time', 'mentor_name', 'company_name',
-        'associate_name'
+        'end_time', 'mentor', 'company',
+        'associate'
     ]
 
     def __repr__(self):
@@ -44,6 +34,6 @@ class Meetings(Base):
                'room_name: %s\n' % self.room_name + \
                'start_time: %s\n' % self.start_time + \
                'end_time %s\n' % self.end_time + \
-               'mentor_name: %s\n' % self.mentor_name + \
-               'company_name: %s\n' % self.company_name + \
-               'associate_name: %s\n' % self.associate_name
+               'mentor: %s\n' % self.mentor + \
+               'company: %s\n' % self.company + \
+               'associate: %s\n' % self.associate

@@ -1,19 +1,53 @@
 import math
+import datetime
 
 # Local imports
+from database.db_errors import *
+import database.db_tables as tables
+from database import Session
+from meeting import Meeting
 from database import db_logging as db
 
 
-def add_to_db(info):
-    paper_info = _make_paper_info(info)
-    db.log_info(paper_info=paper_info)
+def add_to_db(mtg):
+    """
+
+    :param info:
+    :return:
+    """
+    db.log_info(meeting_info=mtg)
+
+
+def get_all_meetings():
+    return db.get_all_meetings()
+
+
+def meeting_search(criteria_dict):
+    return db.meeting_search(criteria_dict)
+
+
+def delete_meeting(info):
+    return db.delete_meeting(info)
+
+
+def process_changes(meetings):
+    if not meetings:
+        return
+    if not isinstance(meetings, list):
+        meetings = [meetings]
+
+    return db.process_changes(meetings)
+
+
+def update_saved_meeting(old_meeting, new_meeting):
+    return db.update_meeting(old_meeting, new_meeting)
 
 
 def update_db_entry(info):
     new_info = _make_paper_info(info)
 
     # Get the saved information that exists for a given entry
-    saved_info = db.get_saved_entry_obj(new_info)
+    saved_info = get_saved_entry_obj(new_info)
 
     main_paper_id = saved_info.main_paper_id
 
@@ -46,7 +80,7 @@ def update_db_entry(info):
                 updating_values.append(new)
 
     # Make the updating requests
-    db.update_general_fields(new_full_dict.get('title'), updating_field=updating_fields,
+    update_general_fields(new_full_dict.get('title'), updating_field=updating_fields,
                              updating_value=updating_values, filter_by_title=True)
 
 
@@ -54,8 +88,8 @@ def check_multiple_constraints(params):
     # Params is a dict
 
     # first_key, first_value = params.popitem()
-    # query_results = db.main_paper_search_wrapper(first_key, first_value)
-    query_results = db.get_all_meetings()
+    # query_results = main_paper_search_wrapper(first_key, first_value)
+    query_results = _get_all_meeting_objs()
 
     for key, value in params.items():
         temp = []
@@ -72,3 +106,4 @@ def check_multiple_constraints(params):
             return None
 
     return query_results
+

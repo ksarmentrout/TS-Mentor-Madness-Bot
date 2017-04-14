@@ -1,17 +1,19 @@
-# Standard
-import datetime
-
 # Local imports
+import sqlalchemy as sql
+
 from database.db_errors import *
 import database.db_tables as tables
 from database import Session
+
 from meeting import Meeting
+from utilities import utils
+from utilities import directories as dr
 
 
-def meeting_search(key, value):
-    # Simple wrapper for filtering by one row entry
+def meeting_search(criteria_dict):
+    # Simple wrapper for filtering by row entries
     session = Session()
-    query_results = session.query(tables.Meetings).filter_by(**{key: value}).all()
+    query_results = session.query(tables.Meetings).filter_by(**criteria_dict).all()
     result_objects = _create_meeting_list_from_saved(meeting_db_entries=query_results)
     _end(session)
     return result_objects
@@ -26,44 +28,20 @@ def get_all_meetings():
     return result_objects
 
 
-def get_saved_info(doi):
+def get_saved_meeting(info):
     # Start a new Session
     session = Session()
 
-    # Get papers with the requested DOI
-    # This should only be 1
-    main_results = session.query(tables.Meetings).filter(
-        (tables.Meetings.doi == doi) | (tables.Meetings.doi == doi.lower())).all()
-    if len(main_results) > 1:
-        raise MultipleDoiError('Multiple papers with the same DOI found')
-    elif len(main_results) == 0:
-        return None
-
-    main_paper = main_results[0]
-    main_id = main_paper.id
-
-    # Make into a Meeting object
-    saved_paper_info = _create_meeting_list_from_saved(main_paper=main_paper)
+    saved_meeting = _get_unique_meeting(info)
+    meeting = _create_meeting_list_from_saved(saved_meeting)
 
     _end(session)
-    return saved_paper_info
+    return meeting if meeting else None
 
 
 def log_info(meeting_info):
     # Start a new Session
     session = Session()
-
-    # if doi is not None:
-    #     doi = doi.lower()
-    #
-    #     # Check if the DOI is already in the main paper database
-    #     existing_doi = session.query(tables.Meetings).filter_by(doi=doi).all()
-    #     if len(existing_doi) > 0:
-    #         return
-    # elif title is not None:
-    #     existing_title = session.query(tables.Meetings).filter_by(title=title).all()
-    #     if len(existing_title) > 0:
-    #         return
 
     # Create entry for main paper table
     main_entry = _create_meeting_table_obj(meeting_info)
@@ -74,14 +52,77 @@ def log_info(meeting_info):
     # Get primary key for main entry
     session.flush()
     session.refresh(main_entry)
-    main_paper_id = main_entry.id
 
     _end(session)
 
 
+def process_changes(meetings):
+    # Start a new Session
+    session = Session()
+
+    adding = dr.empty_name_dict
+    deleting = dr.empty_name_dict
+
+    for mtg in meetings:
+        saved_mtg = get_saved_meeting(mtg)
+
+        # Check if there was a meeting saved
+        if not saved_mtg:
+            adding[mtg.get('company')].append(mtg)
+            adding[mtg.get('associate')].append(mtg)
+
+        # If there was, compare old with new
+        else:
+            saved_mtg = saved_mtg[0]
+            for name in ['company', 'associate']:
+                new_name = mtg.get(name)
+                old_name = saved_mtg.get(name)
+                if new_name != old_name:
+                    if new_name and old_name:
+                        # Someone was changed, assuming the names are different
+                        if utils.process_name(new_name) != utils.process_name(old_name):
+                            deleting[old_name].append(saved_mtg)
+                            adding[new_name].append(mtg)
+                        else:
+                            continue
+                    elif old_name:
+                        # Someone was deleted
+                        deleting[old_name].append(saved_mtg)
+                    elif new_name:
+                        # Someone was added
+                        adding[new_name].append(mtg)
+
+        update_meeting(old_meeting=saved_mtg, new_meeting=mtg, session=session, end_session=False)
+
+    _end(session)
+
+    email_target_dict = {
+        'adding': adding,
+        'deleting': deleting
+    }
+
+    return email_target_dict
+
+
+def update_meeting(old_meeting, new_meeting, session=None, end_session=True):
+    if session is None:
+        session = Session()
+
+    saved_mtg = _get_unique_meeting(old_meeting, session=session)
+    saved_mtg.mentor = new_meeting.mentor
+    saved_mtg.company = new_meeting.company
+    saved_mtg.associate = new_meeting.associate
+
+    session.flush()
+    session.commit()
+
+    if end_session:
+        _end(session)
+
+
 def update_entry_field(identifying_value, updating_field, updating_value):
     """
-    Updates a field or fields within the MainPaperInfo database table.
+    Updates a field or fields within the Meetings database table.
 
     Parameters
     ----------
@@ -164,69 +205,26 @@ def get_saved_entry_obj(new_info):
         raise DatabaseError('No saved paper with matching DOI or title was found.')
 
     saved_obj = saved_obj[0]
-    main_id = saved_obj.id
-
-    # Get author information
-    authors = session.query(tables.Authors).filter_by(main_paper_id=main_id).all()
-
-    # Get references for the main paper
-    refs = session.query(tables.References).join(tables.RefMapping). \
-        filter(tables.RefMapping.main_paper_id == main_id).all()
-
-    # Make into a PaperInfo object
-    saved_info = _create_paper_info_from_saved(main_paper=saved_obj, authors=authors, refs=refs)
-
-    saved_info.fields = saved_obj.fields
-    if authors is not None:
-        saved_info.author_fields = authors[0].fields
-    else:
-        saved_info.author_fields = None
-
-    saved_info.main_paper_id = main_id
 
     _end(session)
     return saved_info
 
 
-def delete_info(doi=None, title=None):
+def delete_meeting(info):
     """
-    Note that this will rarely be used and is mainly for debugging
-        and manual database management reasons. Even if a user opts to
-        delete a document from his/her Mendeley library, the information
-        will not be deleted from the database in case it is to be
-        retrieved again later.
     """
     session = Session()
 
-    if doi is not None:
-        matching_entries = session.query(tables.MainPaperInfo).filter_by(doi=doi).all()
-    elif title is not None:
-        matching_entries = session.query(tables.MainPaperInfo).filter_by(title=title).all()
-    else:
-        raise KeyError('No information given to delete_info.')
+    try:
+        meeting = _get_unique_meeting(info, session=session)
+    except MeetingNotFoundError:
+        return True
 
-    # Extract the main IDs for the entry information
-    ids = []
-    for entry in matching_entries:
-        ids.append(entry.id)
-        session.delete(entry)
-
-    # Delete all references, reference maps, and authors related to the IDs
-    for id in ids:
-        refs = session.query(tables.References).join(tables.RefMapping). \
-            filter(tables.RefMapping.main_paper_id == id).all()
-        for ref in refs:
-            session.delete(ref)
-
-        entry_map = session.query(tables.RefMapping).filter_by(main_paper_id=id).all()
-        for map in entry_map:
-            session.delete(map)
-
-        authors = session.query(tables.Authors).filter_by(main_paper_id=id).all()
-        for author in authors:
-            session.delete(author)
+    session.delete(meeting)
 
     _end(session)
+
+    return True
 
 
 def _update_objects(entries, updating_field, updating_value):
@@ -259,58 +257,19 @@ def _update_objects(entries, updating_field, updating_value):
     return entries
 
 
-def _create_meeting_table_obj(m_dict):
+def _create_meeting_table_obj(mtg):
     db_meeting_entry = tables.Meetings(
-        day=m_dict.get('day'),
-        room_number=m_dict.get('room_number'),
-        room_name=m_dict.get('room_name'),
-        start_time=m_dict.get('start_time'),
-        end_time=m_dict.get('end_time'),
+        day=mtg.get('day'),
+        room_number=mtg.get('room_number'),
+        room_name=mtg.get('room_name'),
+        start_time=mtg.get('start_time'),
+        end_time=mtg.get('end_time'),
 
-        mentor_name=m_dict.get('mentor_name'),
-        company_name=m_dict.get('company_name'),
-        associate_name=m_dict.get('associate_name')
+        mentor=mtg.get('mentor'),
+        company=mtg.get('company'),
+        associate=mtg.get('associate')
     )
     return db_meeting_entry
-
-
-def _fetch_id(session, table_name, doi=None, title=None):
-    """
-    For a given paper, it looks to see if it already exists in a table
-    'table_name' and if so, returns the primary key of its entry in that table.
-
-    Parameters
-    ----------
-    table_name : Base object (from db_tables.py)
-        The table in the database that will be queried.
-    doi : str
-        Paper DOI
-    title : str
-        Paper title
-
-    Returns
-    -------
-    primary_id : int
-        Primary key of the entry corresponding to 'doi' and/or 'title' within
-         'table_name'
-    """
-
-    if doi is not None:
-        paper = session.query(table_name).filter((table_name.doi == doi) | (table_name.doi == doi.lower())).all()
-        if len(paper) > 0:
-            main_paper_id = paper[0].id
-        else:
-            main_paper_id = None
-    elif title is not None:
-        paper = session.query(table_name).filter_by(title=title).all()
-        if len(paper) > 0:
-            main_paper_id = paper[0].id
-        else:
-            main_paper_id = None
-    else:
-        raise LookupError('Cannot establish main paper to link with references.')
-
-    return main_paper_id
 
 
 def _create_meeting_list_from_saved(meeting_db_entries=None):
@@ -330,13 +289,47 @@ def _create_meeting_list_from_saved(meeting_db_entries=None):
         if not isinstance(m, dict):
             m = m.__dict__
 
-        meeting_obj = Meeting()
-        for k, v in m.items():
-            if k != 'timestamp':
-                setattr(meeting_obj, k, v)
+        meeting_obj = Meeting(m)
         entries.append(meeting_obj)
 
     return entries
+
+
+def _get_unique_meeting(mtg, session=None):
+    if session is None:
+        session = Session()
+
+    if isinstance(mtg, Meeting):
+        mtg = mtg.__dict__
+
+    unique_dict = {k: mtg[k] for k in ['day', 'room_number', 'start_time']}
+    filter_rule = sql.and_(
+        tables.Meetings.day == unique_dict['day'],
+        tables.Meetings.room_number == unique_dict['room_number'],
+        tables.Meetings.start_time == unique_dict['start_time'],
+    )
+
+    meeting = session.query(tables.Meetings).filter(filter_rule).all()
+    # if len(meeting) == 0:
+    #     raise MeetingNotFoundError('No meeting matching the description ' + str(info) + ' found in database.')
+    # elif len(meeting) > 1:
+    #     raise DatabaseError('Multiple meetings match "unique" criteria. Problem with _get_unique_meeting()?')
+    if len(meeting) != 1:
+        return None
+    else:
+        meeting = meeting[0]
+
+    # _end(session)
+
+    return meeting
+
+
+def _meeting_exists_in_db(info):
+    try:
+        _get_unique_meeting(info)
+        return True
+    except MeetingNotFoundError:
+        return False
 
 
 def _end(session):

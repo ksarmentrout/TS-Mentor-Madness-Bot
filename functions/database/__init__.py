@@ -15,7 +15,7 @@ from database import db_tables as tables
 # of each repo that uses a Session() object.
 # This method strips the filepath down to `functions` and
 # then points it to create a meetings.db file within `database`.
-package_path = os.path.dirname(os.path.realpath(__file__))
+package_path = os.path.abspath(os.path.dirname(__file__))
 
 
 # SQLite is used to maintain a local database
