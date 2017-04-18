@@ -3,7 +3,7 @@ import os
 
 # Third party imports
 import sqlalchemy as sql
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 # Local imports
 from database import db_tables as tables
@@ -27,5 +27,8 @@ engine_params = dialect + db_path
 
 engine = sql.create_engine(engine_params, echo=False)
 tables.Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
 
+# Using scoped_session to handle thread-local sessions
+Session = scoped_session(sessionmaker(bind=engine))
+
+Connection = engine.connect

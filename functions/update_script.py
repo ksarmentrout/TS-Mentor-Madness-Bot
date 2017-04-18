@@ -1,5 +1,4 @@
 import csv
-from datetime import datetime
 
 import email_sender
 import gcal_scheduler
@@ -52,13 +51,10 @@ def main():
         # Get the sheet
         new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
 
-        # Load new sheet
-        reader = csv.reader(new_sheet)
-
         # Create holder for current state of meetings
         current_meeting_list = []
 
-        for row in reader:
+        for row in new_sheet:
             timeslot = parse_timeslot(row[0])
 
             # Make each rows the full length if it is not
@@ -73,6 +69,7 @@ def main():
                 meeting_info = {
                     'start_time': timeslot,
                     'room_name': room_dict['name'],
+                    'room_number': room_num,
                     'mentor': row[room_dict['mentor_col']],
                     'company': row[room_dict['company_col']],
                     'associate': row[room_dict['associate_col']],

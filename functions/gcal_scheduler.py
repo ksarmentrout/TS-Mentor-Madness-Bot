@@ -69,7 +69,7 @@ def main():
 
     # created_event = cal_api.events().quickAdd(
     #     calendarId=cal_id,
-    #     text='Meeting with Joe Caruso in Room 1 (Glacier) on Tues 2/21 10am-10:30am').execute()
+    #     text='Meeting with Joe Caruso in Room 1 (Glacier) on Tue 2/21 10am-10:30am').execute()
 
     events = cal_api.events().list(calendarId=cal_id, q='Meeting with').execute()
     for event in events['items']:
@@ -81,29 +81,32 @@ def add_cal_events(event_list, cal_api=None):
         cal_api = utils.google_calendar_login()
 
     for meeting in event_list:
-        # If meeting already exists, don't recreate it.
-        meeting_exists = check_for_cal_event(cal_api, meeting)
-        if meeting_exists:
+        try:
+            # If meeting already exists, don't recreate it.
+            meeting_exists = check_for_cal_event(cal_api, meeting)
+            if meeting_exists:
+                continue
+
+            # Get info for the event
+            name = meeting.get('name')
+            if not name:
+                continue
+            name = utils.process_name(name)
+
+            cal_id = dr.calendar_id_dir[name]
+
+            start_time = meeting['time']
+            time_range = utils.make_time_range(start_time)
+            time_range = time_range.replace(' ', '')
+
+            meeting_text = 'Meeting with ' + meeting['mentor'] + ' in Room ' + meeting['room_num']  + \
+                           ' (' + meeting['room_name'] + ') on ' + meeting['day'] + ' ' + time_range
+
+            # Create the event on the appropriate calendar.
+            created_event = cal_api.events().quickAdd(calendarId=cal_id, text=meeting_text).execute()
+            print('created event: ' + created_event['summary'])
+        except:
             continue
-
-        # Get info for the event
-        name = meeting.get('name')
-        if not name:
-            continue
-        name = utils.process_name(name)
-
-        cal_id = dr.calendar_id_dir[name]
-
-        start_time = meeting['time']
-        time_range = utils.make_time_range(start_time)
-        time_range = time_range.replace(' ', '')
-
-        meeting_text = 'Meeting with ' + meeting['mentor'] + ' in Room ' + meeting['room_num']  + \
-                       ' (' + meeting['room_name'] + ') on ' + meeting['day'] + ' ' + time_range
-
-        # Create the event on the appropriate calendar.
-        created_event = cal_api.events().quickAdd(calendarId=cal_id, text=meeting_text).execute()
-        print('created event: ' + created_event['summary'])
 
 
 def delete_cal_events(event_list, cal_api=None):
@@ -111,17 +114,20 @@ def delete_cal_events(event_list, cal_api=None):
         cal_api = utils.google_calendar_login()
 
     for meeting in event_list:
-        event_id = check_for_cal_event(cal_api, meeting, return_event_id=True)
-        if event_id:
-            name = meeting.get('name')
-            if not name:
-                continue
-            name = utils.process_name(name)
-            cal_id = dr.calendar_id_dir[name]
+        try:
+            event_id = check_for_cal_event(cal_api, meeting, return_event_id=True)
+            if event_id:
+                name = meeting.get('name')
+                if not name:
+                    continue
+                name = utils.process_name(name)
+                cal_id = dr.calendar_id_dir[name]
 
-            # Delete event
-            deleted_event = cal_api.events().delete(calendarId=cal_id, eventId=event_id).execute()
-            print('deleted event: ' + deleted_event['summary'])
+                # Delete event
+                deleted_event = cal_api.events().delete(calendarId=cal_id, eventId=event_id).execute()
+                print('deleted event: ' + deleted_event['summary'])
+        except:
+            continue
 
 
 def update_cal_events(added_msg_dicts, deleted_msg_dicts):

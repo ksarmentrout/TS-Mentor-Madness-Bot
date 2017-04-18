@@ -14,6 +14,7 @@ from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 
 from functions.utilities import variables as vrs
+from functions.utilities import directories as dr
 
 
 def parse_webhook_json(added_json):
@@ -129,6 +130,10 @@ def make_time_range(start_time):
 
 
 def get_next_day():
+    """
+    Gets the next business day.
+    :return: Date of next business day in format 'mm/dd'
+    """
     today = datetime.date.today()
     month = today.month
     day = today.day
@@ -141,6 +146,33 @@ def get_next_day():
 
     match_day = str(month) + '/' + str(day)
     return match_day
+
+
+def get_next_week():
+    today = datetime.date.today()
+    week_num = today.isocalendar()[1]
+    next_week = week_num + 1
+
+    # Get the weeks
+    week_lists = vrs.week_lists
+
+    # Get the first day of each week
+    first_days = [x[0] for x in week_lists]
+
+    # Get the mm/dd date in each first day
+    first_days = [x[x.find(' ')+1:] for x in first_days]
+
+    # Parse the dates
+    first_day_objs = [datetime.datetime.strptime(x, '%m/%d') for x in first_days]
+
+    # Find the week numbers for each week
+    week_numbers = [x.isocalendar()[1] for x in first_day_objs]
+
+    # Find the week following the current week
+    if next_week in week_numbers:
+        return week_lists[week_numbers.index(next_week)]
+    else:
+        return None
 
 
 def get_today(skip_weekends=False):
@@ -157,11 +189,19 @@ def get_today(skip_weekends=False):
     return match_day
 
 
+def parse_timeslot(timeslot):
+    return timeslot
+
+
 def day_to_filename(day):
     csv_name = day.replace(' ', '_').replace('/', '_') + '.csv'
     csv_name = '/cached_schedules/' + csv_name
     csv_name = vrs.LOCAL_PATH + csv_name
     return csv_name
+
+
+def get_proper_name(original_name):
+    return dr.names_to_proper_names.get(original_name, '')
 
 
 def process_name(original_name):

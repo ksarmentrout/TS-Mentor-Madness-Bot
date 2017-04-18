@@ -1,0 +1,16 @@
+{% extends 'base_layout.html' %}
+{% block title %}MM Stats{% endblock %}
+{% block body_class %}{% endblock %}
+
+{% block content %}
+    <h1 style="text-align: center; margin-top: 5%;">
+        MM Stats
+    </h1>
+
+    <div id="button-wrapper">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-success">
+            Continue to Dashboard
+        </a>
+    </div>
+
+{% endblock %}

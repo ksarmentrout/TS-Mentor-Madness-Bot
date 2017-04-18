@@ -1,4 +1,3 @@
-# Local imports
 import sqlalchemy as sql
 
 from database.db_errors import *
@@ -44,14 +43,26 @@ def log_info(meeting_info):
     session = Session()
 
     # Create entry for main paper table
-    main_entry = _create_meeting_table_obj(meeting_info)
+    if isinstance(meeting_info, list):
+        for mtg in meeting_info:
+            main_entry = _create_meeting_table_obj(mtg)
 
-    # Add main entry to the table
-    session.add(main_entry)
+            # Add main entry to the table
+            session.add(main_entry)
 
-    # Get primary key for main entry
-    session.flush()
-    session.refresh(main_entry)
+            # Get primary key for main entry
+            # session.flush()
+            # session.refresh(main_entry)
+
+    else:
+        main_entry = _create_meeting_table_obj(meeting_info)
+
+        # Add main entry to the table
+        session.add(main_entry)
+
+        # Get primary key for main entry
+        # session.flush()
+        # session.refresh(main_entry)
 
     _end(session)
 
@@ -215,12 +226,16 @@ def delete_meeting(info):
     """
     session = Session()
 
-    try:
-        meeting = _get_unique_meeting(info, session=session)
-    except MeetingNotFoundError:
-        return True
+    if not isinstance(info, list):
+        info = [info]
 
-    session.delete(meeting)
+    for item in info:
+        try:
+            meeting = _get_unique_meeting(item, session=session)
+        except MeetingNotFoundError:
+            return True
+
+        session.delete(meeting)
 
     _end(session)
 
@@ -336,6 +351,10 @@ def _end(session):
     # Commit and close the session
     try:
         session.commit()
+
+        # Call remove on the Session object, not the session object.
+        # This is to deal with having scoped_session
+        Session.remove()
     except:
         session.rollback()
         raise DatabaseError('Error encountered while committing to database. '

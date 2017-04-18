@@ -1,11 +1,13 @@
 import json
 import os
 import sys
+
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'functions/'))
 import logging
 from logging import FileHandler
 
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 
 from functions.utilities import utils
 from functions.utilities import variables as vrs
@@ -13,16 +15,17 @@ from functions.utilities import directories as dr
 from functions import (
     csv_saving_script, daily_notice, email_sender, exceptions,
     gcal_scheduler, generate_mentor_schedules, meeting,
-    sheets_scheduler, update_script, weekly_notice
+    sheets_scheduler, update_script, weekly_notice, meeting_stats
 )
 
 application = Flask(__name__)
 application.secret_key = 'super secret key'
+# db = SQLAlchemy(application)
 
 print(os.path.abspath(__file__))
 
 # Add logging
-file_handler = FileHandler("debug.log","a")
+file_handler = FileHandler("debug.log", "a")
 file_handler.setLevel(logging.WARNING)
 application.logger.addHandler(file_handler)
 
@@ -44,12 +47,19 @@ def dashboard():
 
     name_list.extend(dr.all_names)
 
+    associate_proper_names = dr.associate_proper_names
+    company_proper_names = dr.company_proper_names
+    mentor_names = meeting_stats.get_mentor_list()
+
     return render_template(
         'dashboard.html',
         days=vrs.sheet_options,
         weeks=vrs.weeks,
         all_names=name_list,
-        all_proper_names=proper_name_list
+        all_proper_names=proper_name_list,
+        associate_names = associate_proper_names,
+        company_names = company_proper_names,
+        mentor_names = mentor_names
     )
 
 
@@ -58,7 +68,6 @@ def view_schedule():
     # flash(request.form)
     # return redirect(url_for('dashboard'))
     form_data = request.form
-
 
     if form_data.get('daily_or_weekly') == 'daily':
         if not form_data.get('day-picker'):
@@ -72,9 +81,9 @@ def view_schedule():
         if not form_data.get('week-picker'):
             flash('Please choose a week to view the schedule. ' + str(form_data))
             return redirect(url_for('dashboard'))
-        # elif not form_data.get('names'):
-        #     flash('Please choose a person or team to view their schedule.')
-        #     return redirect(url_for('dashboard'))
+            # elif not form_data.get('names'):
+            #     flash('Please choose a person or team to view their schedule.')
+            #     return redirect(url_for('dashboard'))
     else:
         return False
 
@@ -101,10 +110,14 @@ def update_db():
         return False
 
 
+@application.route('/stats', methods=['POST'])
+def stats():
 
+    stats_table = meeting_stats.get_stats()
 
-
-
+    return render_template(
+        'stats.html',
+    )
 
 
 @application.route('/added_booking', methods=['POST', 'GET'])
@@ -165,7 +178,6 @@ def changed_booking():
         js = json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
         response = Response(js, status=500, mimetype='application/json')
         return response
-
 
 
 if __name__ == '__main__':

@@ -80,10 +80,10 @@ body {
     align-items: center;
     overflow: auto;
     /*margin-top: 1%;*/
-    /*margin-bottom: 1%;*/
+    margin-bottom: 1%;
     /*margin-right: 1%;*/
     /*margin-left: 1%;*/
-    margin: auto;
+    /*margin: auto;*/
     border-radius: 10px;
     background-color: rgba(54, 66, 69, 0.25);
     /*color: white;*/
@@ -102,6 +102,39 @@ body {
         margin-bottom: 2%;
     }
 }
+
+
+/*
+// ---------------------------------------
+// +++++++++++++++++++++++++++++++++++++++ Stats page section
+// ---------------------------------------
+*/
+
+body            { font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;}
+/*a, h1, h2       { color: #377ba8; }*/
+/*h1, h2          { margin: 0; }*/
+/*h1              { border-bottom: 2px solid #eee; }*/
+/*h2              { font-size: 1.2em; }*/
+
+table.dataframe, .dataframe th, .dataframe td {
+  border: none;
+  border-bottom: 1px solid #C8C8C8;
+  border-collapse: collapse;
+  text-align:left;
+  padding: 10px;
+  margin-bottom: 40px;
+  font-size: 0.9em;
+}
+
+.dataframe th {
+    background-color: #77dd77;
+    color: white;
+}
+
+tr:nth-child(odd)		{ background-color:#eee; }
+tr:nth-child(even)	{ background-color:#fff; }
+
+tr:hover            { background-color: #ffff99;}
 
 
 /*
@@ -226,50 +259,6 @@ form .category-selector-div {
     }
     .title-body h1 {
         font-size: 40px;
-    }
-}
-
-
-/*
-// ---------------------------------------
-// +++++++++++++++++++++++++++++++++++++++ Search results section
-// ---------------------------------------
-*/
-#results-div {
-    position: relative;
-    margin-top: 3%;
-}
-
-.divider {
-    background-color: rgba(158, 124, 255, 1);;
-    height: .8vh;
-    /*margin-bottom: 1%;*/
-}
-
-.data-ul {
-    width: 70%;
-    margin: auto;
-}
-
-.btn:focus,.btn:active {
-   outline: none !important;
-}
-
-.canvas-div {
-    width: 100%;
-}
-
-/* Small and smaller screens */
-@media (max-width: 991px) {
-    #slide-data-wrapper {
-        /*text-align: center;*/
-    }
-}
-
-@media (max-width: 600px) {
-    .provider-name {
-        font-size: 25pt;
-        margin-top: 5%;
     }
 }
 

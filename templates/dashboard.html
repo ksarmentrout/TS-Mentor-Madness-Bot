@@ -85,7 +85,7 @@
                 <h2>Daily Schedules</h2>
 
                 <form action="" method="post" class=center-block" id="daily-form">
-                    <div class="container">
+                    <div class="container-fluid">
                     <div class="form-group col-xs-8 col-md-8" style="margin: 0 auto">
                         <label for="day-picker">Single Day</label>
                         <input type="text" name="day-picker" id="day-picker">
@@ -98,7 +98,7 @@
                     </div>
                     </div>
 
-                    <div class="container">
+                    <div class="container-fluid">
                     <div class="form-group col-xs-8 col-md-8">
                         <label for="names">Recipient</label>
                         <select name="names" id="names">
@@ -110,7 +110,7 @@
                     </div>
                     </div>
 
-                    <div class="container">
+                    <div class="container-fluid">
                     <div class="form-group col-xs-8 col-md-8">
                         <div class="row">
                         <label for="view_or_email">View or Email Schedules?</label>
@@ -149,7 +149,7 @@
 
                 <form action="" method="post" class=center-block" id="weekly-form">
 
-                    <div class="container">
+                    <div class="container-fluid">
                     <div class="form-group col-xs-8 col-md-8">
                         <label for="weeks">Weeks</label>
                         <select name="weeks" id="weeks">
@@ -161,7 +161,7 @@
                     </div>
                     </div>
 
-                    <div class="container">
+                    <div class="container-fluid">
 
 {#                    <label for="week-picker">Single Week</label>#}
 {#                    <div id="week-picker"></div>#}
@@ -173,7 +173,7 @@
                     </div>
 
 
-                    <div class="container">
+                    <div class="container-fluid">
                     <div class="form-group col-xs-8 col-md-8">
                         <div class="row">
                             <label for="view_or_email">View or Email Schedules?</label>
@@ -197,6 +197,53 @@
                     </button>
                     <button type="button" class="btn btn-secondary">
                         Generate Mentor Email Content
+                    </button>
+                </div>
+
+                </form>
+            </div>
+        </div>
+        <div class="col-sm-12">
+            <div class="solid_bubble">
+                <h2>Stats</h2>
+
+                <form action="{{ url_for('stats') }}" method="post" class=center-block" id="weekly-form">
+
+                    <div class="form-group col-xs-4 col-md-4">
+                        <label for="names">Mentor</label>
+                        <select name="names" id="names">
+                            <option value="" selected disabled>--</option>
+                            {% for name in all_names %}
+                                <option value={{ name }}>{{ mentor_names[loop.index0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group col-xs-4 col-md-4">
+                        <label for="names">Company</label>
+                        <select name="names" id="names">
+                            <option value="" selected disabled>--</option>
+                            {% for name in all_names %}
+                                <option value={{ name }}>{{ company_names[loop.index0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group col-xs-4 col-md-4">
+                        <label for="names">Associate</label>
+                        <select name="names" id="names">
+                            <option value="" selected disabled>--</option>
+                            {% for name in all_names %}
+                                <option value={{ name }}>{{ associate_names[loop.index0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+
+                <div class="button-group" style="align-content: center">
+                    <button type="submit" class="btn btn-secondary" id="stats-submit-btn" name="stats_submit_btn"
+                    value="">
+                        Get Meeting Stats
                     </button>
                 </div>
 

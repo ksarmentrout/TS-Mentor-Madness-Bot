@@ -17,9 +17,9 @@ def main():
     spreadsheet_id = vrs.spreadsheet_id
 
     # Set query options
-    week1 = ['Mon 2/13', 'Tues 2/14', 'Wed 2/15', 'Thurs 2/16', 'Fri 2/17']
-    week2 = ['Mon 2/20', 'Tues 2/21', 'Wed 2/22', 'Thurs 2/23', 'Fri 2/24']
-    week3 = ['Mon 2/27', 'Tues 2/28', 'Wed 3/1', 'Thurs 3/2', 'Fri 3/3']
+    week1 = ['Mon 2/13', 'Tue 2/14', 'Wed 2/15', 'Thu 2/16', 'Fri 2/17']
+    week2 = ['Mon 2/20', 'Tue 2/21', 'Wed 2/22', 'Thu 2/23', 'Fri 2/24']
+    week3 = ['Mon 2/27', 'Tue 2/28', 'Wed 3/1', 'Thu 3/2', 'Fri 3/3']
 
     # Determine which days to check for
     sheet_names = week3

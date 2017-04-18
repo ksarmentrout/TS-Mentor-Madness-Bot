@@ -35,11 +35,17 @@ new_m = Meeting(new_meeting)
 
 # print(db.get_all_meetings())
 
-print(db.meeting_search({'company': 'Radiohead'}))
+# print(db.meeting_search({'company': 'Radiohead'}))
 
-db.update_saved_meeting(Meeting(new_meeting), Meeting(newer_meeting))
-print('\n\nUpdated\n\n')
+# db.update_saved_meeting(Meeting(new_meeting), Meeting(newer_meeting))
+# print('\n\nUpdated\n\n')
 
 # print(db.get_all_meetings())
 
-print(db.meeting_search({'company': 'Halp'}))
+# print(db.meeting_search({'day': 'Mon 2/13', 'room_number': 6}))
+#
+# print(len(db.get_all_meetings()))
+
+
+df = db.get_db_as_df()
+

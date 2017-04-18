@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from utilities import utils
+
 
 class Meeting(object):
     def __init__(self, info_dict=None):
@@ -13,23 +15,30 @@ class Meeting(object):
         self.company = None
         self.associate = None
 
+        self.is_populated = False
+
         if info_dict is not None:
             self.set_fields(info_dict)
 
-    def set_fields(self, info_dict):
-        # new_event_dict = {'time': timeslot, 'name': new_name, 'mentor': mentor_name,
-        #                   'room_num': str(room_num), 'room_name': room_name, 'day': day}
+        if self.mentor or self.company or self.associate:
+            self.is_populated = True
 
+    def set_fields(self, info_dict):
         # Populate end_time if only start_time was supplied.
         # Assume a default of a half hour meeting
         if self.start_time is not None and self.end_time is None:
-
 
 
             start_tm = datetime.strptime(self.start_time, '')
 
         for key, value in info_dict.items():
             self.__setattr__(key, value)
+
+        # Process the names
+        if self.company:
+            self.company = utils.process_name(self.company)
+        if self.associate:
+            self.associate = utils.process_name(self.associate)
 
     def get(self, attr):
         return getattr(self, attr, None)
