@@ -204,6 +204,72 @@ def get_proper_name(original_name):
     return dr.names_to_proper_names.get(original_name, '')
 
 
+def format_day_picked(day):
+    """
+    This is for going from the format of the day chosen on the dashboard
+    into the format used for the Google Sheets tabs.
+
+    The day is given as (for example) 'Thu 9/21/2017'.
+    The sheets are styled as 'Thu 9/21'.
+
+    I could just cut off the '/2017' but I'm using datetime for
+    consistency and flexibility.
+
+    :param day: str,
+    :return: string
+    """
+    # Parse the days
+    picked_day = datetime.datetime.strptime(day, '%a %m/%d/%Y')
+
+    # I'm using this instead of strftime to prevent 0-padded days
+    sheet_day = '{dy:%a} {dy.month}/{dy.day}'.format(dy=picked_day)
+    return sheet_day
+
+
+def format_week_picked(week):
+    """
+    The week is given as (for example) 'Sun 4/09/2017 - Sat 4/15/2017'.
+    It lists the Saturday and the Sunday, so this function returns the
+    week (list of days) containing the included Monday.
+
+    :param week:
+    :return:
+    """
+    # Parse the days
+    day_bounds = week.split(' - ')
+    days = [datetime.datetime.strptime(day, '%a %m/%d/%Y') for day in day_bounds]
+
+    # Get the Monday within this week
+    sunday = days[0]
+    monday = sunday + datetime.timedelta(days=1)
+
+    # Parse the Monday
+    sheet_monday = '{dy:%a} {dy.month}/{dy.day}'.format(dy=monday)
+
+    selected_week = [x for x in vrs.week_lists if sheet_monday in x]
+
+    if len(selected_week) > 1:
+        raise IndexError('Multiple weeks returned from the week selected. Error in vrs.week_lists?')
+
+    return selected_week[0]
+
+
+def get_name_type(name):
+    """
+    This returns whether or
+    :param name:
+    :return: str, either "associate" or "company"
+    """
+    if name in dr.company_name_list:
+        name_type = 'company'
+    elif name in dr.associate_name_list:
+        name_type = 'associate'
+    else:
+        name_type = ''
+
+    return name_type
+
+
 def process_name(original_name):
     """
     ALL CASES need to be checked because sometimes other information

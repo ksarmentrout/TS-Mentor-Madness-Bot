@@ -7,7 +7,7 @@ import logging
 from logging import FileHandler
 
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
 
 from functions.utilities import utils
 from functions.utilities import variables as vrs
@@ -17,6 +17,7 @@ from functions import (
     gcal_scheduler, generate_mentor_schedules, meeting,
     sheets_scheduler, update_script, weekly_notice, meeting_stats
 )
+from functions.database import db_interface as db
 
 application = Flask(__name__)
 application.secret_key = 'super secret key'
@@ -51,10 +52,15 @@ def dashboard():
     company_proper_names = dr.company_proper_names
     mentor_names = meeting_stats.get_mentor_list()
 
+    # Need to sort week names
+    week_names = list(vrs.weeks.keys())
+    week_names.sort()
+
     return render_template(
         'dashboard.html',
         days=vrs.sheet_options,
-        weeks=vrs.weeks,
+        week_dict=vrs.weeks,
+        week_names=week_names,
         all_names=name_list,
         all_proper_names=proper_name_list,
         associate_names = associate_proper_names,
@@ -65,11 +71,15 @@ def dashboard():
 
 @application.route('/view_schedule', methods=['POST'])
 def view_schedule():
-    # flash(request.form)
-    # return redirect(url_for('dashboard'))
-    form_data = request.form
+    form_data = request.form.to_dict()
+    page_dict = {
+        'daily_or_weekly': form_data.get('daily_or_weekly'),
+        'name': form_data.get('names')
+    }
 
+    # Check if it's weekly or daily
     if form_data.get('daily_or_weekly') == 'daily':
+        # Ensure that the data is available
         if not form_data.get('day-picker'):
             flash('Please choose a day to view the schedule. ' + str(form_data))
             return redirect(url_for('dashboard'))
@@ -77,27 +87,37 @@ def view_schedule():
             flash('Please choose a person or team to view their schedule.')
             return redirect(url_for('dashboard'))
 
+        # Format the data
+        formatted_date = utils.format_day_picked(form_data['day-picker'])
+        page_dict['date'] = [formatted_date]
+
     elif form_data.get('daily_or_weekly') == 'weekly':
         if not form_data.get('week-picker'):
             flash('Please choose a week to view the schedule. ' + str(form_data))
             return redirect(url_for('dashboard'))
-            # elif not form_data.get('names'):
-            #     flash('Please choose a person or team to view their schedule.')
-            #     return redirect(url_for('dashboard'))
+        elif not form_data.get('names'):
+            flash('Please choose a person or team to view their schedule.')
+            return redirect(url_for('dashboard'))
+
+        # Format the data
+        page_dict['date'] = utils.format_week_picked(form_data['week-picker'])
     else:
         return False
 
-    # TODO: Implement call to database
+    print(page_dict)
+    print('Fetching meetings')
+    meeting_dict = db.get_meeting_views(page_dict)
+    page_dict['meetings'] = meeting_dict
 
     return render_template(
-        'variable_display.html',
-        variable=form_data
+        'view_schedule.html',
+        **page_dict
     )
 
 
 @application.route('/email_schedule', methods=['POST'])
 def email_schedule():
-    flash('schedule was emailed')
+    flash('schedule emailing is not yet implemented')
     return redirect(url_for('dashboard'))
 
 

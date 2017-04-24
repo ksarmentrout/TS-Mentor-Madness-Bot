@@ -2,5 +2,5 @@ version: 1
 cron:
  - name: "update-db"
    url: "/update_db"
-   schedule: "0 * */5 * *"
+   schedule: "*/5 * * * *"
 

@@ -32,10 +32,15 @@ def get_saved_meeting(info):
     session = Session()
 
     saved_meeting = _get_unique_meeting(info)
-    meeting = _create_meeting_list_from_saved(saved_meeting)
+    meeting_list = _create_meeting_list_from_saved(saved_meeting)
+
+    if meeting_list:
+        meeting = meeting_list[0]
+    else:
+        meeting = None
 
     _end(session)
-    return meeting if meeting else None
+    return meeting
 
 
 def log_info(meeting_info):
@@ -75,14 +80,16 @@ def process_changes(meetings):
     deleting = dr.empty_name_dict
 
     for mtg in meetings:
+        # Check if there was a meeting saved.
         saved_mtg = get_saved_meeting(mtg)
 
-        # Check if there was a meeting saved
+        # If there was not a saved meeting, append the meeting
+        # to the company and associate lists
         if not saved_mtg:
             adding[mtg.get('company')].append(mtg)
             adding[mtg.get('associate')].append(mtg)
 
-        # If there was, compare old with new
+        # If there was a saved meeting, compare old with new
         else:
             saved_mtg = saved_mtg[0]
             for name in ['company', 'associate']:
@@ -131,94 +138,21 @@ def update_meeting(old_meeting, new_meeting, session=None, end_session=True):
         _end(session)
 
 
-def update_entry_field(identifying_value, updating_field, updating_value):
-    """
-    Updates a field or fields within the Meetings database table.
+def add_meeting_cal_event_ids(meeting_dict):
+    # if not isinstance(meetings, list):
+    #     meetings = [meetings]
 
-    Parameters
-    ----------
-    identifying_value : str
-        Can be a paper title or DOI - used to identify which entries are being updated.
-    updating_field : str or list
-        The field(s) of the database table to be updated.
-    updating_value : str or list
-        The value(s) to populate the updating field(s).
-    """
-    session = Session()
-    if filter_by_title:
-        entries = session.query(tables.Meetings).filter_by(title=identifying_value).all()
-    elif filter_by_doi:
-        entries = session.query(tables.Meetings).filter_by(doi=identifying_value).all()
-    else:
-        _end(session)
-        return
-
-    entries = _update_objects(entries, updating_field=updating_field, updating_value=updating_value)
-    _end(session)
-
-
-def update_general_fields(identifying_value, updating_field, updating_value,
-                          main_paper_id=None):
-    """
-    Updates a field or fields within the database.
-
-    Parameters
-    ----------
-    See 'update_entry_field'
-
-    """
     session = Session()
 
-    if filter_by_title:
-        # Case-insensitive search for matching with title
-        main_entries = session.query(tables.Meetings).filter(
-            tables.MainPaperInfo.title.ilike(identifying_value)).all()
-    elif filter_by_doi:
-        main_entries = session.query(tables.Meetings).filter(
-            tables.MainPaperInfo.doi.ilike(identifying_value)).all()
-    else:
-        _end(session)
-        return
+    for name, meetings in meeting_dict.iteritems():
+        for meeting in meetings:
+            saved_meeting = _get_unique_meeting(meeting, session)
+            saved_meeting.company_cal_event_id = meeting.company_cal_event_id
+            saved_meeting.associate_cal_event_id = meeting.associate_cal_event_id
 
-    if len(main_entries) == 0:
-        raise DatabaseError('No saved documents found.')
-
-    if main_paper_id is None:
-        main_paper_id = main_entries[0].id
-
-    author_entries = session.query(tables.Authors).filter_by(main_paper_id=main_paper_id).all()
-
-    zipped = zip(updating_field, updating_value)
-    for field, value in zipped:
-        # If the field is specific to a certain author, update the author objects
-        if field in ['name', 'affiliations', 'email']:
-            author_entries = _update_objects(author_entries, updating_field=field, updating_value=value)
-            continue
-        else:
-            main_entries = _update_objects(main_entries, updating_field=field, updating_value=value)
-
+    session.flush()
+    session.commit()
     _end(session)
-
-
-def get_saved_entry_obj(new_info):
-    session = Session()
-
-    if new_info.doi is not None:
-        saved_obj = session.query(tables.MainPaperInfo).filter_by(doi=new_info.doi).all()
-    elif new_info.entry.title is not None:
-        saved_obj = session.query(tables.MainPaperInfo).filter_by(title=new_info.entry.title).all()
-    else:
-        raise KeyError('No title or DOI found within updating entry')
-
-    if len(saved_obj) > 1:
-        raise DatabaseError('Multiple entries with the same DOI or title were found.')
-    elif len(saved_obj) == 0:
-        raise DatabaseError('No saved paper with matching DOI or title was found.')
-
-    saved_obj = saved_obj[0]
-
-    _end(session)
-    return saved_info
 
 
 def delete_meeting(info):
@@ -291,7 +225,7 @@ def _create_meeting_list_from_saved(meeting_db_entries=None):
     """
 
     :param meeting_db_entries:
-    :return:
+    :return: list of Meeting objects
     """
     # Create references list
     entries = []
@@ -311,6 +245,12 @@ def _create_meeting_list_from_saved(meeting_db_entries=None):
 
 
 def _get_unique_meeting(mtg, session=None):
+    """
+
+    :param mtg: Meeting object or dictionary
+    :param session: instance of Session object
+    :return: Meetings database object (NOT a Meeting object!)
+    """
     if session is None:
         session = Session()
 

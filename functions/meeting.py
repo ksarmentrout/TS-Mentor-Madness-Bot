@@ -15,6 +15,9 @@ class Meeting(object):
         self.company = None
         self.associate = None
 
+        self.associate_cal_event_id = None
+        self.company_cal_event_id = None
+
         self.is_populated = False
 
         if info_dict is not None:

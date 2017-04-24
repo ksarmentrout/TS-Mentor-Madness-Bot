@@ -47,5 +47,9 @@ new_m = Meeting(new_meeting)
 # print(len(db.get_all_meetings()))
 
 
-df = db.get_db_as_df()
+# df = db.get_db_as_df()
+# print(df.head())
+#
+stuff = db.get_all_daily_schedules('offgridbox', 'company', 'Tue 2/14')
 
+print(stuff)

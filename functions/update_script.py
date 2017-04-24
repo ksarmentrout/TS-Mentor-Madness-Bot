@@ -87,6 +87,17 @@ def main():
         adding = update_dict['adding']
         deleting = update_dict['deleting']
 
+        # TODO: HALP! the email sender is broken
+        '''
+        It isn't set up correctly. Here I'm giving it dictionaries where the keys are names and the values are lists
+        of Meeting objects, but it's not set up to handle that. It also kicks off to the daily_notice function and I'm
+        not sure how it handles the things either.
+
+        Also, the gcal_scheduler is not set up correctly. In this file, the update script is sending it dictionaries,
+        but in another file, the add function of gcal_scheduler is just getting a list of Meeting objects!! I don't
+        know which one to handle!
+        '''
+
         # Send emails
         email_sender.send_update_mail(adding, deleting)
         gcal_scheduler.update_cal_events(adding, deleting)

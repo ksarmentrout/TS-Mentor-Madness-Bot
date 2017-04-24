@@ -18,6 +18,9 @@ class Meetings(Base):
     company = sql.Column(sql.VARCHAR)
     associate = sql.Column(sql.VARCHAR)
 
+    associate_cal_event_id = sql.Column(sql.VARCHAR)
+    company_cal_event_id = sql.Column(sql.VARCHAR)
+
     timestamp = sql.Column(sql.TIMESTAMP)
 
     # This is used for comparisons with updated information.

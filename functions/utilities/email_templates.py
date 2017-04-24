@@ -1,11 +1,8 @@
 added_meeting_msg = \
     'Hello [ADDRESS NAME],\n' \
     '\n' + \
-    'You have been scheduled for the following meeting with [MENTOR NAME]:\n' \
-    '\n' + \
-    '[DAY] - [TIME]\n' + \
-    'Room [ROOM NUMBER] ([ROOM NAME])\n' \
-    '\n' \
+    'You have been scheduled for the following meeting(s):' \
+    '[ADDED MEETING LIST]' \
     '\n' \
     'Your full updated schedule for [DAY] is as follows:' \
     '[FULL MEETING LIST]' \
@@ -18,11 +15,8 @@ added_meeting_msg = \
 deleted_meeting_msg = \
     'Hello [ADDRESS NAME],\n' \
     '\n' + \
-    'You have been REMOVED FROM the following meeting with [MENTOR NAME]:\n' \
-    '\n' + \
-    '[DAY] - [TIME]\n' + \
-    'Room [ROOM NUMBER] ([ROOM NAME])\n' \
-    '\n' \
+    'You have been REMOVED FROM the following meeting(s):' \
+    '[DELETED MEETING LIST]' \
     '\n' \
     'Your full updated schedule for [DAY] is as follows:' \
     '[FULL MEETING LIST]' \

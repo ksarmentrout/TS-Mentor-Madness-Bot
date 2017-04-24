@@ -1,0 +1,25 @@
+{% extends 'base_layout.html' %}
+{% block title %}Schedule View{% endblock %}
+
+{% block content %}
+<div>
+    {% for name in meetings %}
+        {% for meeting in meetings[name] %}
+            {% if not meeting.is_populated %}
+                <h2>{{ meeting.day }} - {{ name }}</h2>
+                <br/>
+            {% else %}
+                {{ meeting.start_time }} - {{ meeting.mentor }}
+                <ul>
+{#                    <li>Mentor: {{ meeting.mentor }}</li>#}
+                    {% if meeting.associate %}
+                        <li>Associate: {{ meeting.associate }}</li>
+                    {% endif %}
+{#                    <li>Time: {{ meeting.start_time }}</li>#}
+                    <li>Location: Room {{ meeting.room_number }} ({{ meeting.room_name }})</li>
+                </ul>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</div>
+{% endblock %}
