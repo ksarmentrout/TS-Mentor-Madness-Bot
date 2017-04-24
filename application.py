@@ -63,9 +63,9 @@ def dashboard():
         week_names=week_names,
         all_names=name_list,
         all_proper_names=proper_name_list,
-        associate_names = associate_proper_names,
-        company_names = company_proper_names,
-        mentor_names = mentor_names
+        associate_names=associate_proper_names,
+        company_names=company_proper_names,
+        mentor_names=mentor_names
     )
 
 
@@ -104,8 +104,6 @@ def view_schedule():
     else:
         return False
 
-    print(page_dict)
-    print('Fetching meetings')
     meeting_dict = db.get_meeting_views(page_dict)
     page_dict['meetings'] = meeting_dict
 
@@ -132,7 +130,6 @@ def update_db():
 
 @application.route('/stats', methods=['POST'])
 def stats():
-
     stats_table = meeting_stats.get_stats()
 
     return render_template(

@@ -46,17 +46,14 @@ def get_all_daily_schedules(name, name_type, day):
         name_type: name,
         'day': day
     }
+
     meeting_list = db.meeting_search(criteria_dict)
 
     if not meeting_list:
         return []
 
-    for x in meeting_list:
-        print(x.start_time)
-
     # Sort the daily schedules by time
     meeting_list.sort(key=lambda x: x.start_time)
-    print(meeting_list)
 
     return meeting_list
 
@@ -134,8 +131,6 @@ def get_meeting_views(page_dict):
     # Add all the meetings
     meeting_dict = _add_all_meetings_to_view(meeting_dict=meeting_dict, name_list=name_list, days=days)
 
-    print(meeting_dict)
-    print('\n')
     return meeting_dict
 
 
