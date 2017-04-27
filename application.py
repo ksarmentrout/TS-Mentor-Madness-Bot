@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import datetime
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'functions/'))
 import logging
@@ -56,6 +57,10 @@ def dashboard():
     week_names = list(vrs.weeks.keys())
     week_names.sort()
 
+    # Get today's date
+    today = datetime.datetime.today()
+    today = '{dy:%A}, {dy.month}/{dy.day}/{dy.year}'.format(dy=today)
+
     return render_template(
         'dashboard.html',
         days=vrs.sheet_options,
@@ -65,7 +70,8 @@ def dashboard():
         all_proper_names=proper_name_list,
         associate_names=associate_proper_names,
         company_names=company_proper_names,
-        mentor_names=mentor_names
+        mentor_names=mentor_names,
+        todays_date=today
     )
 
 
@@ -115,8 +121,48 @@ def view_schedule():
 
 @application.route('/email_schedule', methods=['POST'])
 def email_schedule():
-    flash('schedule emailing is not yet implemented')
-    return redirect(url_for('dashboard'))
+    # flash('schedule emailing is not yet implemented')
+    # return redirect(url_for('dashboard'))
+    form_data = request.form.to_dict()
+    page_dict = {
+        'daily_or_weekly': form_data.get('daily_or_weekly'),
+        'name': form_data.get('names')
+    }
+
+    # Check if it's weekly or daily
+    if form_data.get('daily_or_weekly') == 'daily':
+        # Ensure that the data is available
+        if not form_data.get('day-picker'):
+            flash('Please choose a day to view the schedule. ' + str(form_data))
+            return redirect(url_for('dashboard'))
+        elif not form_data.get('names'):
+            flash('Please choose a person or team to view their schedule.')
+            return redirect(url_for('dashboard'))
+
+        # Format the data
+        formatted_date = utils.format_day_picked(form_data['day-picker'])
+        page_dict['date'] = [formatted_date]
+
+    elif form_data.get('daily_or_weekly') == 'weekly':
+        if not form_data.get('week-picker'):
+            flash('Please choose a week to view the schedule. ' + str(form_data))
+            return redirect(url_for('dashboard'))
+        elif not form_data.get('names'):
+            flash('Please choose a person or team to view their schedule.')
+            return redirect(url_for('dashboard'))
+
+        # Format the data
+        page_dict['date'] = utils.format_week_picked(form_data['week-picker'])
+    else:
+        return False
+
+    meeting_dict = db.get_meeting_views(page_dict)
+    page_dict['meetings'] = meeting_dict
+
+    return render_template(
+        'view_schedule.html',
+        **page_dict
+    )
 
 
 @application.route('/update_db', methods=['POST'])

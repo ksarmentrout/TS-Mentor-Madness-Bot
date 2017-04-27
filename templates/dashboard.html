@@ -67,6 +67,8 @@
     <h1 style="text-align: center; margin-top: 5%;">
         Dashboard
     </h1>
+    <h4 style="text-align: center">Today is {{ todays_date }}</h4>
+
     {% with messages = get_flashed_messages() %}
        {% if messages %}
           {% for message in messages %}
@@ -78,6 +80,34 @@
     {% endwith %}
 
     <div class="col-lg-12 column-container">
+
+            {#    Quick Links block    #}
+        <div class="col-sm-12">
+            <div class="solid_bubble">
+                <h2>Quick Links</h2>
+
+                <div class="button-group" style="align-content: center">
+                    <button class="btn btn-secondary" id="" name="">
+                        View Tomorrow's Schedule
+                    </button>
+
+                    <button class="btn btn-secondary" id="" name=""
+                    value="">
+                        Email Tomorrow's Schedule
+                    </button>
+
+                    <button class="btn btn-secondary" id="" name="">
+                        View Next Week's Schedule
+                    </button>
+
+                    <button class="btn btn-secondary" id="" name=""
+                    value="">
+                        Email Next Week's Schedule
+                    </button>
+                </div>
+
+            </div>
+        </div>
 
         {#    Daily Schedule block    #}
         <div class="col-sm-6">
