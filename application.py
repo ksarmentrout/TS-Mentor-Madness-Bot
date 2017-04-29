@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import datetime
+from collections import OrderedDict
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'functions/'))
 import logging
@@ -75,13 +76,21 @@ def dashboard():
     )
 
 
+@application.route('/view_tomorrow_schedule', methods=['GET', 'POST'])
+def view_tomorrow_schedule():
+    pass
+
+
+@application.route('/view_next_week_schedule', methods=['GET', 'POST'])
+def view_next_week_schedule():
+    pass
+
+
 @application.route('/view_schedule', methods=['POST'])
 def view_schedule():
     form_data = request.form.to_dict()
-    page_dict = {
-        'daily_or_weekly': form_data.get('daily_or_weekly'),
-        'name': form_data.get('names')
-    }
+    daily_or_weekly = form_data.get('daily_or_weekly')
+    name = form_data.get('names')
 
     # Check if it's weekly or daily
     if form_data.get('daily_or_weekly') == 'daily':
@@ -95,7 +104,7 @@ def view_schedule():
 
         # Format the data
         formatted_date = utils.format_day_picked(form_data['day-picker'])
-        page_dict['date'] = [formatted_date]
+        date = [formatted_date]
 
     elif form_data.get('daily_or_weekly') == 'weekly':
         if not form_data.get('week-picker'):
@@ -106,16 +115,45 @@ def view_schedule():
             return redirect(url_for('dashboard'))
 
         # Format the data
-        page_dict['date'] = utils.format_week_picked(form_data['week-picker'])
+        date = utils.format_week_picked(form_data['week-picker'])
     else:
         return False
 
-    meeting_dict = db.get_meeting_views(page_dict)
-    page_dict['meetings'] = meeting_dict
+    # Get a dict of meetings
+    meetings = db.get_meeting_views(name=name, date=date)
+
+    # Get name lists
+    associate_proper_names = dr.associate_proper_names
+    company_proper_names = dr.company_proper_names
+
+    # Make the associate and company dictionaries s.t. they're sorted
+    associate_meetings = OrderedDict()
+    company_meetings = OrderedDict()
+
+    for associate in associate_proper_names:
+        if meetings[associate]:
+            associate_meetings[associate] = meetings[associate]
+
+    for company in company_proper_names:
+        if meetings[company]:
+            company_meetings[company] = meetings[company]
+
+    there_are_associates = False
+    there_are_companies = False
+    if len(associate_meetings) >= 1:
+        there_are_associates = True
+    if len(company_meetings) >= 1:
+        there_are_companies = True
 
     return render_template(
         'view_schedule.html',
-        **page_dict
+        daily_or_weekly=daily_or_weekly,
+        date=date,
+        name=name,
+        there_are_associates=there_are_associates,
+        there_are_companies=there_are_companies,
+        associate_meetings=associate_meetings,
+        company_meetings=company_meetings
     )
 
 
@@ -156,7 +194,7 @@ def email_schedule():
     else:
         return False
 
-    meeting_dict = db.get_meeting_views(page_dict)
+    meeting_dict = db.get_meeting_views(page_dict['name'], page_dict['date'])
     page_dict['meetings'] = meeting_dict
 
     return render_template(

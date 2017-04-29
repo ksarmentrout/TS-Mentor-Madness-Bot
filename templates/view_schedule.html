@@ -3,23 +3,55 @@
 
 {% block content %}
 <div>
-    {% for name in meetings %}
-        {% for meeting in meetings[name] %}
-            {% if not meeting.is_populated %}
-                <h2>{{ meeting.day }} - {{ name }}</h2>
-                <br/>
-            {% else %}
-                {{ meeting.start_time }} - {{ meeting.mentor }}
-                <ul>
-{#                    <li>Mentor: {{ meeting.mentor }}</li>#}
-                    {% if meeting.associate %}
-                        <li>Associate: {{ meeting.associate }}</li>
+    {% if there_are_companies %}
+        <div>
+            <h1>Companies:</h1>
+        </div>
+        {% for name in company_meetings %}
+            <div id="{{ name }}">
+                <h2>{{ name }}</h2>
+                {% for meeting in company_meetings[name] %}
+                    {% if meeting.is_divider %}
+                        {% for elt in meeting.html_repr_array %}
+                            <h3>{{ elt }}</h3>
+{#                            <br/>#}
+                        {% endfor %}
+                    {% else %}
+                        {% for elt in meeting.html_repr_array %}
+                            {{ elt }}
+                            <br/>
+                        {% endfor %}
                     {% endif %}
-{#                    <li>Time: {{ meeting.start_time }}</li>#}
-                    <li>Location: Room {{ meeting.room_number }} ({{ meeting.room_name }})</li>
-                </ul>
-            {% endif %}
+                    <br/>
+                {% endfor %}
+            </div>
         {% endfor %}
-    {% endfor %}
+    {% endif %}
+
+    {% if there_are_associates %}
+        <div>
+            <h1>Associates:</h1>
+        </div>
+        {% for name in associate_meetings %}
+            <div id="{{ name }}">
+                <h1>{{ name }}</h1>
+                {% for meeting in associate_meetings[name] %}
+                    {% if not meeting.is_populated %}
+                        <h2>{{ meeting.day }}</h2>
+                        <br/>
+                    {% else %}
+                        {{ meeting.start_time }} - {{ meeting.mentor }}
+                        <ul>
+                            {% if meeting.company %}
+                                <li>Company: {{ meeting.company }}</li>
+                            {% endif %}
+                            <li>Location: Room {{ meeting.room_number }} ({{ meeting.room_name }})</li>
+                        </ul>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
+
 </div>
 {% endblock %}
