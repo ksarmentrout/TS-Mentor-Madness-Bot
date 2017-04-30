@@ -1,5 +1,3 @@
-import csv
-
 from meeting import Meeting
 from functions.utilities import utils
 from functions.utilities import variables as vrs

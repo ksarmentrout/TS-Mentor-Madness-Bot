@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import datetime
+import traceback
 from collections import OrderedDict
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'functions/'))
@@ -15,9 +16,9 @@ from functions.utilities import utils
 from functions.utilities import variables as vrs
 from functions.utilities import directories as dr
 from functions import (
-    csv_saving_script, daily_notice, email_sender, exceptions,
+    csv_saving_script, schedule_handler, email_sender, exceptions,
     gcal_scheduler, generate_mentor_schedules, meeting,
-    sheets_scheduler, update_script, weekly_notice, meeting_stats
+    sheets_scheduler, update_script, meeting_stats
 )
 from functions.database import db_interface as db
 
@@ -78,12 +79,82 @@ def dashboard():
 
 @application.route('/view_tomorrow_schedule', methods=['GET', 'POST'])
 def view_tomorrow_schedule():
-    pass
+    name = 'everyone'
+    daily_or_weekly = 'daily'
+
+    # Get a dict of meetings
+    meetings = schedule_handler.get_meeting_views(
+        name=name,
+        daily_or_weekly=daily_or_weekly
+    )
+
+    # Break into associate and company lists
+    associate_company_meeting_dict = utils.associate_and_company_meetings_dict(meetings)
+
+    return render_template(
+        'view_schedule.html',
+        **associate_company_meeting_dict
+    )
 
 
 @application.route('/view_next_week_schedule', methods=['GET', 'POST'])
 def view_next_week_schedule():
-    pass
+    name = 'everyone'
+    daily_or_weekly = 'weekly'
+
+    # Get a dict of meetings
+    meetings = schedule_handler.get_meeting_views(
+        name=name,
+        daily_or_weekly=daily_or_weekly
+    )
+
+    # Break into associate and company lists
+    associate_company_meeting_dict = utils.associate_and_company_meetings_dict(meetings)
+
+    return render_template(
+        'view_schedule.html',
+        **associate_company_meeting_dict
+    )
+
+
+@application.route('/email_tomorrow_schedule', methods=['POST'])
+def email_tomorrow_schedule():
+    name = 'everyone'
+    daily_or_weekly = 'daily'
+
+    # Get schedules and send emails
+    try:
+        schedule_handler.email_meetings(name, daily_or_weekly)
+        flash('Emails were sent successfully.')
+        return redirect(url_for('dashboard'))
+
+    except Exception:
+        tb = sys.exc_traceback
+        variable = ''.join(traceback.format_tb(tb))
+        return render_template(
+            'variable_display.html',
+            variable=variable
+        )
+
+
+@application.route('/email_next_week_schedule', methods=['POST'])
+def email_next_week_schedule():
+    name = 'everyone'
+    daily_or_weekly = 'weekly'
+
+    # Get schedules and send emails
+    try:
+        schedule_handler.email_meetings(name, daily_or_weekly)
+        flash('Emails were sent successfully.')
+        return redirect(url_for('dashboard'))
+
+    except Exception:
+        tb = sys.exc_traceback
+        variable = ''.join(traceback.format_tb(tb))
+        return render_template(
+            'variable_display.html',
+            variable=variable
+        )
 
 
 @application.route('/view_schedule', methods=['POST'])
@@ -120,52 +191,26 @@ def view_schedule():
         return False
 
     # Get a dict of meetings
-    meetings = db.get_meeting_views(name=name, date=date)
+    meetings = schedule_handler.get_meeting_views(
+        name=name,
+        specific_date=date,
+        daily_or_weekly=daily_or_weekly
+    )
 
-    # Get name lists
-    associate_proper_names = dr.associate_proper_names
-    company_proper_names = dr.company_proper_names
-
-    # Make the associate and company dictionaries s.t. they're sorted
-    associate_meetings = OrderedDict()
-    company_meetings = OrderedDict()
-
-    for associate in associate_proper_names:
-        if meetings[associate]:
-            associate_meetings[associate] = meetings[associate]
-
-    for company in company_proper_names:
-        if meetings[company]:
-            company_meetings[company] = meetings[company]
-
-    there_are_associates = False
-    there_are_companies = False
-    if len(associate_meetings) >= 1:
-        there_are_associates = True
-    if len(company_meetings) >= 1:
-        there_are_companies = True
+    # Break into associate and company lists
+    associate_company_meeting_dict = utils.associate_and_company_meetings_dict(meetings)
 
     return render_template(
         'view_schedule.html',
-        daily_or_weekly=daily_or_weekly,
-        date=date,
-        name=name,
-        there_are_associates=there_are_associates,
-        there_are_companies=there_are_companies,
-        associate_meetings=associate_meetings,
-        company_meetings=company_meetings
+        **associate_company_meeting_dict
     )
 
 
 @application.route('/email_schedule', methods=['POST'])
 def email_schedule():
-    # flash('schedule emailing is not yet implemented')
-    # return redirect(url_for('dashboard'))
     form_data = request.form.to_dict()
-    page_dict = {
-        'daily_or_weekly': form_data.get('daily_or_weekly'),
-        'name': form_data.get('names')
-    }
+    daily_or_weekly = form_data.get('daily_or_weekly'),
+    name = form_data.get('names')
 
     # Check if it's weekly or daily
     if form_data.get('daily_or_weekly') == 'daily':
@@ -177,9 +222,7 @@ def email_schedule():
             flash('Please choose a person or team to view their schedule.')
             return redirect(url_for('dashboard'))
 
-        # Format the data
-        formatted_date = utils.format_day_picked(form_data['day-picker'])
-        page_dict['date'] = [formatted_date]
+        specific_date = form_data['day-picker']
 
     elif form_data.get('daily_or_weekly') == 'weekly':
         if not form_data.get('week-picker'):
@@ -189,18 +232,23 @@ def email_schedule():
             flash('Please choose a person or team to view their schedule.')
             return redirect(url_for('dashboard'))
 
-        # Format the data
-        page_dict['date'] = utils.format_week_picked(form_data['week-picker'])
+        specific_date = form_data['week_picker']
     else:
         return False
 
-    meeting_dict = db.get_meeting_views(page_dict['name'], page_dict['date'])
-    page_dict['meetings'] = meeting_dict
+    # Get schedules and send emails
+    try:
+        schedule_handler.email_meetings(name, specific_date, daily_or_weekly)
+        flash('Emails were sent successfully.')
+        return redirect(url_for('dashboard'))
 
-    return render_template(
-        'view_schedule.html',
-        **page_dict
-    )
+    except Exception:
+        tb = sys.exc_traceback
+        variable = ''.join(traceback.format_tb(tb))
+        return render_template(
+            'variable_display.html',
+            variable=variable
+        )
 
 
 @application.route('/update_db', methods=['POST'])

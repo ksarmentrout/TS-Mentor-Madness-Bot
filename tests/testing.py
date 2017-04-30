@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import pytest
 
 from functions import (
-    csv_saving_script, daily_notice, email_sender,
+    csv_saving_script, schedule_handler, email_sender,
     gcal_scheduler, generate_mentor_schedules, sheets_scheduler,
     update_script, weekly_notice
 )

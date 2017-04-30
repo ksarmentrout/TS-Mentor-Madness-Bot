@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import pandas as pd
 
 # Local imports
@@ -5,7 +7,7 @@ from database import Connection
 from database import db_logging as db
 from utilities import directories as dr
 from utilities import utils
-from meeting import Meeting, DividerMeeting
+from meeting import DividerMeeting
 
 
 def add_to_db(mtg):
@@ -58,24 +60,21 @@ def get_all_daily_schedules(name, name_type, day):
     return meeting_list
 
 
-def add_all_meetings_to_view(meeting_dict, name_list, days):
+def add_all_meetings_to_view(name_list, days):
     """
 
-    :param meeting_dict:
-    :param name:
-    :param name_type:
-    :param proper_name:
-    :param day:
+    :param name_list:
+    :param days:
     :return:
     """
+    # Initialize dictionary for meetings
+    meeting_dict = defaultdict(list)
+
     for name in name_list:
         name_type = utils.get_name_type(name)
 
         # Get proper name
         proper_name = utils.get_proper_name(name)
-
-        # Initialize meeting list for name
-        meeting_dict[proper_name] = []
 
         for day in days:
             # Create a divider with only the day filled in
@@ -84,10 +83,8 @@ def add_all_meetings_to_view(meeting_dict, name_list, days):
 
             # Add all meetings for that day
             meeting_list = get_all_daily_schedules(name, name_type, day)
-            for x in meeting_list:
-                if x.associate:
-                    x.associate = utils.get_proper_name(x.associate)
 
+            # Add meetings to the list for a given name
             meeting_dict[proper_name].extend(meeting_list)
 
     return meeting_dict

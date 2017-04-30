@@ -8,6 +8,7 @@ variables.py is for OTHER VARIABLES (mostly for Google Sheets)
 
 import datetime
 import re
+from collections import OrderedDict
 
 from googleapiclient.discovery import build
 from httplib2 import Http
@@ -20,13 +21,13 @@ from functions.utilities import directories as dr
 def parse_webhook_json(added_json):
     ad = added_json
     ad['name'] = ad.get('first_name') + ' ' + ad.get('last_name')
-    time_dict = parse_time(ad)
+    time_dict = _parse_time_from_webhook_json(ad)
     ad.update(**time_dict)
 
     return ad
 
 
-def parse_time(original_dict):
+def _parse_time_from_webhook_json(original_dict):
     time_dict = {}
     start_field = original_dict['start_time']
     end_field = original_dict['end_time']
@@ -201,7 +202,7 @@ def day_to_filename(day):
 
 
 def get_proper_name(original_name):
-    return dr.names_to_proper_names.get(original_name, '')
+    return dr.names_to_proper_names.get(original_name, original_name)
 
 
 def format_day_picked(day):
@@ -256,7 +257,7 @@ def format_week_picked(week):
 
 def get_name_type(name):
     """
-    This returns whether or
+
     :param name:
     :return: str, either "associate" or "company"
     """
@@ -265,9 +266,38 @@ def get_name_type(name):
     elif name in dr.associate_name_list:
         name_type = 'associate'
     else:
-        name_type = ''
+        name_type = 'mentor'
 
     return name_type
+
+
+def associate_and_company_meetings_dict(meetings):
+    # Make the associate and company dictionaries s.t. they're sorted
+    associate_meetings = OrderedDict()
+    company_meetings = OrderedDict()
+
+    for associate in dr.associate_proper_names:
+        if meetings[associate]:
+            associate_meetings[associate] = meetings[associate]
+
+    for company in dr.company_proper_names:
+        if meetings[company]:
+            company_meetings[company] = meetings[company]
+
+    there_are_associates = False
+    there_are_companies = False
+    if len(associate_meetings) >= 1:
+        there_are_associates = True
+    if len(company_meetings) >= 1:
+        there_are_companies = True
+
+    meetings_dict = {
+        'there_are_associates': there_are_associates,
+        'there_are_companies': there_are_companies,
+        'associate_meetings': associate_meetings,
+        'company_meetings': company_meetings
+    }
+    return meetings_dict
 
 
 def process_name(original_name):
