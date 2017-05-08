@@ -9,40 +9,49 @@ from utilities import utils
 from utilities import directories as dr
 
 
-def meeting_search(criteria_dict):
+def meeting_search(criteria_dict, session=None):
     """
     Simple wrapper for filtering by row entries.
 
     :param criteria_dict: dictionary of parameters to search for meetings
+    :param session: instance of SQLAlchemy Session object
     :return: results of the filtered database search
     """
-    session = Session()
+    if session is None:
+        session = Session()
+
     query_results = session.query(tables.Meetings).filter_by(**criteria_dict).all()
     result_objects = _create_meeting_list_from_saved(meeting_db_entries=query_results)
     _end(session)
     return result_objects
 
 
-def get_all_meetings():
+def get_all_meetings(session=None):
     """
     Returns entirety of Meetings table.
+
+    :param session: instance of SQLAlchemy Session object
     :return: list of Meeting objects representing all meetings in the database
     """
-    session = Session()
+    if session is None:
+        session = Session()
+
     results = session.query(tables.Meetings).all()
     result_objects = _create_meeting_list_from_saved(meeting_db_entries=results)
     _end(session)
     return result_objects
 
 
-def get_saved_meeting(mtg):
+def get_saved_meeting(mtg, session=None):
     """
 
     :param mtg:
+    :param session: instance of SQLAlchemy Session object
     :return:
     """
     # Start a new Session
-    session = Session()
+    if session is None:
+        session = Session()
 
     saved_meeting = _get_unique_meeting(mtg)
     meeting_list = _create_meeting_list_from_saved(saved_meeting)
@@ -56,15 +65,17 @@ def get_saved_meeting(mtg):
     return meeting
 
 
-def log_info(meeting_info_list):
+def log_info(meeting_info_list, session=None):
     """
     Adds Meeting objects to the database.
 
     :param meeting_info_list: list of Meeting objects
+    :param session: instance of SQLAlchemy Session object
     :return: True if successful, else error
     """
     # Start a new Session
-    session = Session()
+    if session is None:
+        session = Session()
 
     # Create entry for main paper table
     for mtg in meeting_info_list:
@@ -81,9 +92,16 @@ def log_info(meeting_info_list):
     return True
 
 
-def process_changes(meetings):
+def process_changes(meetings, session=None):
+    """
+
+    :param meetings:
+    :param session: instance of SQLAlchemy Session object
+    :return:
+    """
     # Start a new Session
-    session = Session()
+    if session is None:
+        session = Session()
 
     adding = dr.empty_name_dict
     deleting = dr.empty_name_dict
@@ -132,6 +150,14 @@ def process_changes(meetings):
 
 
 def update_meeting(old_meeting, new_meeting, session=None, end_session=True):
+    """
+
+    :param old_meeting:
+    :param new_meeting:
+    :param session: instance of SQLAlchemy Session object
+    :param end_session:
+    :return:
+    """
     if session is None:
         session = Session()
 
@@ -147,11 +173,18 @@ def update_meeting(old_meeting, new_meeting, session=None, end_session=True):
         _end(session)
 
 
-def add_meeting_cal_event_ids(meeting_dict):
+def add_meeting_cal_event_ids(meeting_dict, session=None):
+    """
+
+    :param meeting_dict:
+    :param session: instance of SQLAlchemy Session object
+    :return:
+    """
     # if not isinstance(meetings, list):
     #     meetings = [meetings]
 
-    session = Session()
+    if session is None:
+        session = Session()
 
     for name, meetings in meeting_dict.iteritems():
         for meeting in meetings:
@@ -164,10 +197,15 @@ def add_meeting_cal_event_ids(meeting_dict):
     _end(session)
 
 
-def delete_meeting(info):
+def delete_meeting(info, session=None):
     """
+
+    :param info:
+    :param session: instance of SQLAlchemy Session object
+    :return:
     """
-    session = Session()
+    if session is None:
+        session = Session()
 
     if not isinstance(info, list):
         info = [info]
@@ -188,11 +226,6 @@ def delete_meeting(info):
 def _update_objects(entries, updating_field, updating_value):
     """
     Handles all attribute setting to update database session objects.
-
-    Parameters
-    ----------
-    See 'update_entry_field'
-
     """
     # If there are multiple fields to be updated
     if isinstance(updating_field, list):

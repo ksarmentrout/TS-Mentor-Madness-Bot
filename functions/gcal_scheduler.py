@@ -57,6 +57,12 @@ def add_cal_events(meeting_dict, cal_api=None):
 
 
 def delete_cal_events(meeting_dict, cal_api=None):
+    """
+
+    :param meeting_dict:
+    :param cal_api:
+    :return:
+    """
     if cal_api is None:
         cal_api = utils.google_calendar_login()
 
@@ -79,6 +85,12 @@ def delete_cal_events(meeting_dict, cal_api=None):
 
 
 def update_cal_events(added_msg_dicts, deleted_msg_dicts):
+    """
+
+    :param added_msg_dicts:
+    :param deleted_msg_dicts:
+    :return:
+    """
     cal_api = utils.google_calendar_login()
 
     # Add and delete calendar events
@@ -87,6 +99,13 @@ def update_cal_events(added_msg_dicts, deleted_msg_dicts):
 
 
 def check_for_cal_event(meeting, name, return_event_id=False):
+    """
+
+    :param meeting:
+    :param name:
+    :param return_event_id:
+    :return:
+    """
     # First, check that there is a calendar associated with the name
     cal_id = dr.calendar_id_dir[name]
     if not cal_id:

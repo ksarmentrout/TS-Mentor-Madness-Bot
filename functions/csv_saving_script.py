@@ -6,12 +6,12 @@ from functions.utilities import utils
 
 def main():
     """
+    This function is from the previous iteration of this system, when the schedules were
+    compared using cached CSVs rather than calls to a database. This is now depreciated.
+
     This function accesses the sheets for each day of Mentor Madness and ONLY SAVES THEM.
 
     This DOES NOT do any comparisons or alerts.
-
-    This function is from the previous iteration of this system, when the schedules were
-    compared using cached CSVs rather than calls to a database.
     """
     # Build Google API response object for sheets
     sheets_api = utils.google_sheets_login()
