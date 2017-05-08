@@ -12,8 +12,8 @@ from database import db_interface as db
 def send_added_msgs(msg_dicts, server):
     """
 
-    :param msg_dicts: dictionary where keys are names and values are lists of meetings
-    :param server:
+    :param msg_dicts: dictionary where keys: names and values: lists of Meeting objects
+    :param server: instance of SMTP server
     :return:
     """
     for name, meeting_list in msg_dicts.items():
@@ -44,12 +44,12 @@ def send_added_msgs(msg_dicts, server):
             # Load email template and populate with personalized info
             msg = email_templates.added_meeting_msg
 
-            added_meeting_list = bulk_event_formatter(daily_meetings)
+            added_meeting_list = _bulk_event_formatter(daily_meetings)
             msg.replace('[ADDED MEETING LIST]', added_meeting_list)
             msg.replace(['[ADDRESS NAME]'], address_name)
             msg.replace(['[DAY]'], day)
 
-            event_list = bulk_event_formatter(full_schedule[name])
+            event_list = _bulk_event_formatter(full_schedule[name])
             if not event_list:
                 msg.replace('[FULL MEETING LIST]', '\n\nNo meetings!')
             else:
@@ -83,7 +83,7 @@ def send_deleted_msgs(msg_dicts, server):
     """
 
     :param msg_dicts:
-    :param server:
+    :param server: instance of SMTP server
     :return:
     """
     for name, meeting_list in msg_dicts.items():
@@ -114,13 +114,13 @@ def send_deleted_msgs(msg_dicts, server):
             msg = email_templates.deleted_meeting_msg
 
             # Format the meetings and insert them into the email template
-            deleted_meeting_list = bulk_event_formatter(daily_meetings)
+            deleted_meeting_list = _bulk_event_formatter(daily_meetings)
             msg.replace('[DELETED MEETING LIST]', deleted_meeting_list)
             msg.replace(['[ADDRESS NAME]'], address_name)
             msg.replace(['[DAY]'], day)
 
             # Format the full schedule and insert that as well
-            event_list = bulk_event_formatter(full_schedule[name])
+            event_list = _bulk_event_formatter(full_schedule[name])
             if not event_list:
                 msg.replace('[FULL MEETING LIST]', '\n\nNo meetings!')
             else:
@@ -149,7 +149,13 @@ def send_deleted_msgs(msg_dicts, server):
 
 
 def send_update_mail(added_msg_dicts, deleted_msg_dicts):
-    server = email_login()
+    """
+
+    :param added_msg_dicts:
+    :param deleted_msg_dicts:
+    :return:
+    """
+    server = _email_login()
 
     # Send mail
     send_added_msgs(added_msg_dicts, server)
@@ -160,12 +166,17 @@ def send_update_mail(added_msg_dicts, deleted_msg_dicts):
 
 
 def send_daily_mail(targets):
-    server = email_login()
+    """
+
+    :param targets:
+    :return:
+    """
+    server = _email_login()
 
     for key, events in targets.items():
         msg = email_templates.daily_mail_msg
 
-        event_list = bulk_event_formatter(events)
+        event_list = _bulk_event_formatter(events)
         if not event_list:
             msg.replace('[FULL MEETING LIST]', '\n\nNo meetings!')
         else:
@@ -195,13 +206,18 @@ def send_daily_mail(targets):
 
 
 def send_weekly_mail(targets):
-    server = email_login()
+    """
+
+    :param targets:
+    :return:
+    """
+    server = _email_login()
 
     for key, events in targets.items():
         msg = 'Hello ' + dr.names_to_proper_names[key] + ',\n\n' + \
               'Here are your scheduled meetings for this week:\n\n'
 
-        event_list = bulk_event_formatter(events)
+        event_list = _bulk_event_formatter(events)
         if not event_list:
             msg += 'No meetings!'
         else:
@@ -234,23 +250,26 @@ def send_weekly_mail(targets):
 
 
 def make_daily_mentor_schedules(mentor_dict):
+    """
+    Generates
+
+    :param mentor_dict:
+    :return:
+    """
     for key, events in mentor_dict.items():
         day = events[0].get('day')
 
-        msg = 'Hi ' + key + ',\n\n' + \
-              'Thank you for volunteering to mentor companies in the 2017 Techstars Boston cohort! Here are your ' \
-              'scheduled meetings for ' + day + ':\n\n'
+        msg = email_templates.mentor_reminder_msg
+        msg.replace('[KEY]', key)
+        msg.replace('[DAY]', day)
 
-        event_list = bulk_event_formatter(events, for_mentors=True)
+        event_list = _bulk_event_formatter(events, for_mentors=True)
         if not event_list:
-            msg += 'No meetings!'
+            full_meeting_list = 'No meetings!'
         else:
-            msg += ''.join(event_list)
+            full_meeting_list = ''.join(event_list)
 
-        msg += '\n\nDirections and parking instructions are attached. Please contact Ashley at (615) 719-4951' \
-               ', Ty, or myself with any changes or cancellations.\n\n' \
-            'Thank you,\n' \
-            'Keaton'
+        msg.replace('[FULL MEETING LIST]', full_meeting_list)
 
         # Save message to a .txt file
         dirname = day.replace(' ', '_').replace('/', '_')
@@ -261,13 +280,19 @@ def make_daily_mentor_schedules(mentor_dict):
 
 
 def make_mentor_packet_schedules(mentor_dict):
+    """
+
+
+    :param mentor_dict:
+    :return:
+    """
     for key, events in mentor_dict.items():
         day = events[0].get('day')
 
         msg = '<h1>' + key + '</h1><br/><br/>' + \
               '<h2>Schedule - ' + day + '</h2><br/><br/>'
 
-        event_list = bulk_event_formatter(events, for_mentors=True)
+        event_list = _bulk_event_formatter(events, for_mentors=True)
         if not event_list:
             msg += 'No meetings!'
         else:
@@ -281,7 +306,13 @@ def make_mentor_packet_schedules(mentor_dict):
             file.write(msg)
 
 
-def email_login():
+def _email_login():
+    """
+    Helper function to log in to the gmail account for the Mentor
+    Madness Bot and return an instance of the authenticated server.
+
+    :return: an instance of an SMTP server
+    """
     # Get login credentials from stored file
     login_file = vrs.LOCAL_PATH +'mm_bot_gmail_login.txt'
     file = open(login_file, 'r')
@@ -299,15 +330,16 @@ def email_login():
     return server
 
 
-def bulk_event_formatter(event_list, for_mentors=False):
+def _bulk_event_formatter(event_list, for_mentors=False):
     """
 
+
     :param event_list: list of Meeting objects
-    :param for_mentors:
-    :return:
+    :param for_mentors: bool specifying if the meeting summary is for a mentor
+    :return: list of formatted strings, each summarizing a meeting
     """
     # First check to see if the event dict list is made up only of headers.
-    # In this case, there are no actual events, so return None
+    # In this case, there are no actual events, so return an empty list
     if not any(ed.get('start_time', False) for ed in event_list):
         return []
 
