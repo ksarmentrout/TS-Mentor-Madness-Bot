@@ -46,3 +46,11 @@ weekly_mail_msg = \
     '\nPlease check the main schedule if this is in error.\n' \
     '\n' + \
     '- Scheduling Bot'
+
+
+mentor_reminder_msg = 'Hi [KEY],\n\n' + \
+    'Thank you for volunteering to mentor companies in the 2017 Techstars Boston cohort! Here are your ' \
+    'scheduled meetings for [DAY]:\n\n[FULL MEETING LIST]' + \
+    '\n\nDirections and parking instructions are attached.\n\n' \
+    'Thank you,\n' \
+    'Techstars'

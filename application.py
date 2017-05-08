@@ -3,7 +3,6 @@ import os
 import sys
 import datetime
 import traceback
-from collections import OrderedDict
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'functions/'))
 import logging
@@ -15,11 +14,13 @@ from flask import Flask, render_template, request, Response, flash, redirect, ur
 from functions.utilities import utils
 from functions.utilities import variables as vrs
 from functions.utilities import directories as dr
+
 from functions import (
-    csv_saving_script, schedule_handler, email_sender, exceptions,
+    csv_saving_script, schedule_handler, email_sender,
     gcal_scheduler, generate_mentor_schedules, meeting,
     sheets_scheduler, update_script, meeting_stats
 )
+from functions.exceptions import *
 from functions.database import db_interface as db
 
 application = Flask(__name__)
@@ -83,13 +84,17 @@ def view_tomorrow_schedule():
     daily_or_weekly = 'daily'
 
     # Get a dict of meetings
-    meetings = schedule_handler.get_meeting_views(
-        name=name,
-        daily_or_weekly=daily_or_weekly
-    )
-
-    # Break into associate and company lists
-    associate_company_meeting_dict = utils.associate_and_company_meetings_dict(meetings)
+    try:
+        meetings = schedule_handler.get_meeting_views(
+            name=name,
+            daily_or_weekly=daily_or_weekly
+        )
+        # Break into associate and company lists
+        associate_company_meeting_dict = utils.associate_and_company_meetings_dict(meetings)
+    except IndexError:
+        tomorrow = utils.get_next_day()
+        flash('No meetings were found for the date ' + tomorrow + '.')
+        return redirect(url_for('dashboard'))
 
     return render_template(
         'view_schedule.html',
@@ -103,10 +108,16 @@ def view_next_week_schedule():
     daily_or_weekly = 'weekly'
 
     # Get a dict of meetings
-    meetings = schedule_handler.get_meeting_views(
-        name=name,
-        daily_or_weekly=daily_or_weekly
-    )
+    try:
+        meetings = schedule_handler.get_meeting_views(
+            name=name,
+            daily_or_weekly=daily_or_weekly
+        )
+    except IndexError:
+        next_week = utils.get_next_week()
+
+        flash('No meetings were found for the date ' + next_week + '.')
+        return redirect(url_for('dashboard'))
 
     # Break into associate and company lists
     associate_company_meeting_dict = utils.associate_and_company_meetings_dict(meetings)

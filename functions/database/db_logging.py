@@ -10,7 +10,12 @@ from utilities import directories as dr
 
 
 def meeting_search(criteria_dict):
-    # Simple wrapper for filtering by row entries
+    """
+    Simple wrapper for filtering by row entries.
+
+    :param criteria_dict: dictionary of parameters to search for meetings
+    :return: results of the filtered database search
+    """
     session = Session()
     query_results = session.query(tables.Meetings).filter_by(**criteria_dict).all()
     result_objects = _create_meeting_list_from_saved(meeting_db_entries=query_results)
@@ -19,7 +24,10 @@ def meeting_search(criteria_dict):
 
 
 def get_all_meetings():
-    # Returns entirety of Meetings table
+    """
+    Returns entirety of Meetings table.
+    :return: list of Meeting objects representing all meetings in the database
+    """
     session = Session()
     results = session.query(tables.Meetings).all()
     result_objects = _create_meeting_list_from_saved(meeting_db_entries=results)
@@ -27,11 +35,16 @@ def get_all_meetings():
     return result_objects
 
 
-def get_saved_meeting(info):
+def get_saved_meeting(mtg):
+    """
+
+    :param mtg:
+    :return:
+    """
     # Start a new Session
     session = Session()
 
-    saved_meeting = _get_unique_meeting(info)
+    saved_meeting = _get_unique_meeting(mtg)
     meeting_list = _create_meeting_list_from_saved(saved_meeting)
 
     if meeting_list:
@@ -43,33 +56,29 @@ def get_saved_meeting(info):
     return meeting
 
 
-def log_info(meeting_info):
+def log_info(meeting_info_list):
+    """
+    Adds Meeting objects to the database.
+
+    :param meeting_info_list: list of Meeting objects
+    :return: True if successful, else error
+    """
     # Start a new Session
     session = Session()
 
     # Create entry for main paper table
-    if isinstance(meeting_info, list):
-        for mtg in meeting_info:
+    for mtg in meeting_info_list:
+        try:
             main_entry = _create_meeting_table_obj(mtg)
 
             # Add main entry to the table
             session.add(main_entry)
-
-            # Get primary key for main entry
-            # session.flush()
-            # session.refresh(main_entry)
-
-    else:
-        main_entry = _create_meeting_table_obj(meeting_info)
-
-        # Add main entry to the table
-        session.add(main_entry)
-
-        # Get primary key for main entry
-        # session.flush()
-        # session.refresh(main_entry)
+        except:
+            raise DatabaseError('Could not add meeting ' + mtg)
 
     _end(session)
+
+    return True
 
 
 def process_changes(meetings):
@@ -207,6 +216,11 @@ def _update_objects(entries, updating_field, updating_value):
 
 
 def _create_meeting_table_obj(mtg):
+    """
+    Turns a Meeting object into a database object
+    :param mtg: Meeting
+    :return: database meeting object
+    """
     db_meeting_entry = tables.Meetings(
         day=mtg.get('day'),
         room_number=mtg.get('room_number'),

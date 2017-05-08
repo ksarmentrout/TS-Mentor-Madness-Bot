@@ -2,8 +2,7 @@ import traceback
 from collections import defaultdict
 
 import email_sender
-import gcal_scheduler
-from meeting import DividerMeeting
+from exceptions import *
 from database import db_interface as db
 from functions.utilities import utils as utils
 from functions.utilities import variables as vrs
@@ -21,21 +20,28 @@ def get_meeting_views(name, specific_date=None, daily_or_weekly=None):
     :return:
     """
     # Add all the meetings
-    meeting_dict = main_setup(
-        name=name,
-        specific_date=specific_date,
-        daily_or_weekly=daily_or_weekly
-    )
+    try:
+        meeting_dict = main_setup(
+            name=name,
+            specific_date=specific_date,
+            daily_or_weekly=daily_or_weekly
+        )
+    except DateNotFoundError as exc:
+        print(exc.args)
+        raise IndexError(exc.args[0])
 
     return meeting_dict
 
 
 def email_meetings(name, specific_date=None, daily_or_weekly=None):
-    meeting_dict = main_setup(
-        name=name,
-        specific_date=specific_date,
-        daily_or_weekly=daily_or_weekly
-    )
+    try:
+        meeting_dict = main_setup(
+            name=name,
+            specific_date=specific_date,
+            daily_or_weekly=daily_or_weekly
+        )
+    except DateNotFoundError as exc:
+        raise DateNotFoundError(exc)
 
     try:
         email_sender.send_daily_mail(meeting_dict)
@@ -48,7 +54,12 @@ def main_setup(name, specific_date=None, daily_or_weekly=None):
     days = parse_time(specific_date=specific_date, daily_or_weekly=daily_or_weekly)
 
     if not days:
-        return None
+        error_msg = 'Error occurred when getting the ' + daily_or_weekly + ' schedule'
+        if specific_date:
+            error_msg += ' for ' + specific_date
+        error_msg += '.'
+
+        raise DateNotFoundError(error_msg)
 
     name_list = parse_name_to_list(name)
 
@@ -89,9 +100,10 @@ def parse_time(specific_date, daily_or_weekly):
     if specific_date is None and daily_or_weekly is None:
         return None
 
-    # Make sure that specific_days is a list
-    if not isinstance(specific_date, list):
-        specific_date = [specific_date]
+    # Make sure that specific_days is a list of strings
+    if specific_date:
+        if not isinstance(specific_date, list):
+            specific_date = [specific_date]
 
     if daily_or_weekly == 'daily':
         # Determine which day to send for
@@ -111,8 +123,10 @@ def parse_time(specific_date, daily_or_weekly):
             days = vrs.weeks.get(specific_week)
         else:
             days = utils.get_next_week()
+
+        # TODO: make sure that the days of the week are some of the page options
     else:
-        raise KeyError("Unrecognized value '" + daily_or_weekly + "' in time selection.")
+        return None
 
     return days
 

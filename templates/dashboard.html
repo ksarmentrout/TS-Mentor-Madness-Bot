@@ -86,24 +86,32 @@
             <div class="solid_bubble">
                 <h2>Quick Links</h2>
 
-                <div class="button-group" style="align-content: center">
-                    <button class="btn btn-secondary" id="" name="">
-                        View Tomorrow's Schedule
-                    </button>
+                <div class="button-group row" style="align-content: center">
+                    <form action="{{ url_for('view_tomorrow_schedule') }}" class="col-md-3">
+                        <button type="submit" class="btn btn-secondary" id="" name="">
+                            View Tomorrow's Schedule
+                        </button>
+                    </form>
 
-                    <button class="btn btn-secondary" id="" name=""
-                    value="">
-                        Email Tomorrow's Schedule
-                    </button>
+                    <form action="{{ url_for('view_next_week_schedule') }}" class="col-md-3">
+                        <button type="submit" class="btn btn-secondary" id="" name=""
+                        value="">
+                            Email Tomorrow's Schedule
+                        </button>
+                    </form>
 
-                    <button class="btn btn-secondary" id="" name="">
-                        View Next Week's Schedule
-                    </button>
+                    <form action="{{ url_for('email_tomorrow_schedule') }}" class="col-md-3">
+                        <button type="submit" class="btn btn-secondary" id="" name="">
+                            View Next Week's Schedule
+                        </button>
+                    </form>
 
-                    <button class="btn btn-secondary" id="" name=""
-                    value="">
-                        Email Next Week's Schedule
-                    </button>
+                    <form action="{{ url_for('email_next_week_schedule') }}" class="col-md-3">
+                        <button type="submit" class="btn btn-secondary" id="" name=""
+                        value="">
+                            Email Next Week's Schedule
+                        </button>
+                    </form>
                 </div>
 
             </div>

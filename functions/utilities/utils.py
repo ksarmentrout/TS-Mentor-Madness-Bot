@@ -150,6 +150,10 @@ def get_next_day():
 
 
 def get_next_week():
+    """
+
+    :return: string of the next week
+    """
     today = datetime.date.today()
     week_num = today.isocalendar()[1]
     next_week = week_num + 1
@@ -173,7 +177,7 @@ def get_next_week():
     if next_week in week_numbers:
         return week_lists[week_numbers.index(next_week)]
     else:
-        return None
+        return ''
 
 
 def get_today(skip_weekends=False):

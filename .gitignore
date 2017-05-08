@@ -16,3 +16,10 @@
 
 *.log
 
+# Cached schedules from previous iteration
+cached_schedules/
+
+# Files with sensitive information
+functions/utilities/variables.py
+functions/utilities/directories.py
+

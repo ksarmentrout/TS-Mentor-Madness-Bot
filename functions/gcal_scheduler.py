@@ -11,79 +11,6 @@ os.environ['mm_bot_gmail_name'] = vrs.mm_bot_gmail_name
 os.environ['mm_bot_gmail_password'] = vrs.mm_bot_gmail_password
 
 
-def booking_setup(raw_json, custom_range=None):
-    """
-    I don't know what this is doing
-
-    :param raw_json:
-    :param custom_range:
-    :return:
-    """
-    # Build Google API response object for sheets
-    sheets_api = utils.google_sheets_login()
-
-    meeting = utils.parse_webhook_json(raw_json)
-
-    # Set spreadsheet ID
-    spreadsheet_id = vrs.spreadsheet_id
-
-    # Set room mapping
-    room_mapping = vrs.room_mapping
-
-    # Set query options
-    sheet_options = vrs.sheet_options
-
-    # Set day to retrieve
-    sheet_names = [x for x in sheet_options if meeting['day'] in x]
-    if not sheet_names:
-        # TODO: Implement some sort of error notification. Maybe email.
-        return
-
-    if len(sheet_names) > 1:
-        sheet_names = sheet_names[0]
-
-    day = sheet_names[0]
-
-    # Get the range of times to look at
-    if custom_range is None:
-        cell_range = utils.make_cell_range(meeting['start_time'], meeting['end_time'])
-    else:
-        cell_range = custom_range
-    sheet_query = day + '!' + cell_range
-
-    # Get the sheet
-    new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
-
-    return_dict = {
-        'new_sheet': new_sheet,
-        'spreadsheet_id': spreadsheet_id,
-        'range_query': sheet_query,
-        'meeting': meeting,
-        'sheets_api': sheets_api
-    }
-
-    return return_dict
-
-
-def main():
-    cal_api = utils.google_calendar_login()
-
-    calendar_list = cal_api.calendarList().list(showHidden=True).execute()
-    # print(calendar_list)
-    # for calendar_list_entry in calendar_list['items']:
-    #     print(calendar_list_entry['summary'])
-
-    cal_id = 'cs6ctbvacn0nq68qgf3ofsffh8@group.calendar.google.com'
-
-    # created_event = cal_api.events().quickAdd(
-    #     calendarId=cal_id,
-    #     text='Meeting with Joe Caruso in Room 1 (Glacier) on Tue 2/21 10am-10:30am').execute()
-
-    events = cal_api.events().list(calendarId=cal_id, q='Meeting with').execute()
-    for event in events['items']:
-        print(event)
-
-
 def add_cal_events(meeting_dict, cal_api=None):
     """
 
@@ -103,9 +30,6 @@ def add_cal_events(meeting_dict, cal_api=None):
             # if meeting.associate:
             #     names.append(meeting.associate)
 
-            # Iterate over company and associate (if present)
-            # to make separate calendar events
-            # for name in names:
             # If meeting already exists, don't recreate it.
             meeting_exists = check_for_cal_event(meeting, name)
             if meeting_exists:
@@ -190,8 +114,52 @@ def check_for_cal_event(meeting, name, return_event_id=False):
         return event_exists
 
 
-if __name__ == '__main__':
-    # main()
-    # test_event = [{'day': 'Mon 2/20', 'mentor': 'Joe Caruso, Bantam', 'name': 'keaton', 'room_name': 'Harbor', 'room_num': '2', 'time': '9:30 AM'}]
-    # delete_cal_events(test_event)
-    pass
+def booking_setup(raw_json, custom_range=None):
+    """
+    Left over from previous implementation
+
+    :param raw_json:
+    :param custom_range:
+    :return:
+    """
+    # Build Google API response object for sheets
+    sheets_api = utils.google_sheets_login()
+
+    meeting = utils.parse_webhook_json(raw_json)
+
+    # Set spreadsheet ID
+    spreadsheet_id = vrs.spreadsheet_id
+
+    # Set query options
+    sheet_options = vrs.sheet_options
+
+    # Set day to retrieve
+    sheet_names = [x for x in sheet_options if meeting['day'] in x]
+    if not sheet_names:
+        # TODO: Implement some sort of error notification. Maybe email.
+        return
+
+    if len(sheet_names) > 1:
+        sheet_names = sheet_names[0]
+
+    day = sheet_names[0]
+
+    # Get the range of times to look at
+    if custom_range is None:
+        cell_range = utils.make_cell_range(meeting['start_time'], meeting['end_time'])
+    else:
+        cell_range = custom_range
+    sheet_query = day + '!' + cell_range
+
+    # Get the sheet
+    new_sheet = utils.get_sheet(sheets_api, spreadsheet_id=spreadsheet_id, sheet_query=sheet_query)
+
+    return_dict = {
+        'new_sheet': new_sheet,
+        'spreadsheet_id': spreadsheet_id,
+        'range_query': sheet_query,
+        'meeting': meeting,
+        'sheets_api': sheets_api
+    }
+
+    return return_dict

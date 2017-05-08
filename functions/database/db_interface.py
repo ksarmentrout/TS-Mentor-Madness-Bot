@@ -16,7 +16,11 @@ def add_to_db(mtg):
     :param mtg: Meeting object or list of Meeting objects
     :return:
     """
-    db.log_info(meeting_info=mtg)
+    # Make the Meeting object part of a list if it isn't already
+    if not isinstance(mtg, list):
+        mtg = [mtg]
+
+    return db.log_info(meeting_info_list=mtg)
 
 
 def get_all_meetings():
@@ -27,13 +31,13 @@ def meeting_search(criteria_dict):
     return db.meeting_search(criteria_dict)
 
 
-def get_saved_meeting(info):
+def get_saved_meeting(mtg):
     """
 
-    :param info: Meeting object
+    :param mtg: Meeting object
     :return:
     """
-    return db.get_saved_meeting(info)
+    return db.get_saved_meeting(mtg)
 
 
 def get_all_daily_schedules(name, name_type, day):
