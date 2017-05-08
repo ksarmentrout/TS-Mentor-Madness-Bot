@@ -9,14 +9,14 @@ from utilities import email_templates
 from database import db_interface as db
 
 
-def send_added_msgs(msg_dicts, server):
+def send_added_msgs(msg_dict, server):
     """
 
-    :param msg_dicts: dictionary where keys: names and values: lists of Meeting objects
+    :param msg_dict: dictionary where keys: names and values: lists of Meeting objects
     :param server: instance of SMTP server
     :return:
     """
-    for name, meeting_list in msg_dicts.items():
+    for name, meeting_list in msg_dict.items():
         # clean_name = utils.process_name(name)
 
         # Group by day:
@@ -79,14 +79,14 @@ def send_added_msgs(msg_dicts, server):
                 print('Sent added email - ' + address_name + ' for ' + day)
 
 
-def send_deleted_msgs(msg_dicts, server):
+def send_deleted_msgs(mtg_dict, server):
     """
 
-    :param msg_dicts:
+    :param mtg_dict: dictionary where keys: names and values: lists of Meeting objects
     :param server: instance of SMTP server
     :return:
     """
-    for name, meeting_list in msg_dicts.items():
+    for name, meeting_list in mtg_dict.items():
         # Group by day:
         day_list = [x.day for x in meeting_list]
         unique_days = set(day_list)
@@ -148,32 +148,32 @@ def send_deleted_msgs(msg_dicts, server):
                 print('Sent deleted email - ' + address_name + ' for ' + day)
 
 
-def send_update_mail(added_msg_dicts, deleted_msg_dicts):
+def send_update_mail(added_mtg_dict, deleted_mtg_dict):
     """
 
-    :param added_msg_dicts:
-    :param deleted_msg_dicts:
+    :param added_mtg_dict: dict where keys: names w/ added meetings and values: lists of Meeting objects
+    :param deleted_mtg_dict: dict where keys: names w/ deleted meetings and values: lists of Meeting objects
     :return:
     """
     server = _email_login()
 
     # Send mail
-    send_added_msgs(added_msg_dicts, server)
-    send_deleted_msgs(deleted_msg_dicts, server)
+    send_added_msgs(added_mtg_dict, server)
+    send_deleted_msgs(deleted_mtg_dict, server)
 
     # Close connection
     server.quit()
 
 
-def send_daily_mail(targets):
+def send_daily_mail(mtg_dict):
     """
 
-    :param targets:
+    :param mtg_dict:
     :return:
     """
     server = _email_login()
 
-    for key, events in targets.items():
+    for key, events in mtg_dict.items():
         msg = email_templates.daily_mail_msg
 
         event_list = _bulk_event_formatter(events)
@@ -205,15 +205,15 @@ def send_daily_mail(targets):
     server.quit()
 
 
-def send_weekly_mail(targets):
+def send_weekly_mail(mtg_dict):
     """
 
-    :param targets:
+    :param mtg_dict:
     :return:
     """
     server = _email_login()
 
-    for key, events in targets.items():
+    for key, events in mtg_dict.items():
         msg = 'Hello ' + dr.names_to_proper_names[key] + ',\n\n' + \
               'Here are your scheduled meetings for this week:\n\n'
 
